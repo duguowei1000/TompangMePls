@@ -26,18 +26,18 @@ app.use(methodOverride("_method")); //put Delete
 app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
 app.use(express.json());
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'));
-app.use(`/${botToken}`, webhookCallback(bot, "express"));
 //async await
 app.post(`/${botToken}`, (req, res) => {
     try {
-        bot.handleUpdate(req.body, res);
+        console.log('reqbody', req.body);
+        //  bot.handleUpdate(req.body, res)
         res.json({ message: req.body });
-        console.log(req.body);
     }
     catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+app.use(`/${botToken}`, webhookCallback(bot, "express"));
 app.listen(Number(process.env.PORT), async () => {
     // Make sure it is `https` not `http`!
     console.log(`Example app listening on port ${port}!`);
