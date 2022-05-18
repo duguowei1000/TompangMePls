@@ -32,7 +32,7 @@ bot.command("start", (ctx) => ctx.reply("Hello there!"));
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
 bot.on("message", (ctx) => ctx.reply("Got another message!"));
-bot.start();
+// bot.start(); ###DONT USE THIS###
 ///EXPRESS
 const app = express();
 app.use(morgan("tiny"));
