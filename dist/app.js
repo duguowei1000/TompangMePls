@@ -32,7 +32,7 @@ bot.command("start", (ctx) => ctx.reply("Hello there!"));
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
 bot.on("message", (ctx) => ctx.reply("Got another message!"));
-bot.start();
+// bot.start();
 ///EXPRESS
 const app = express();
 app.use(morgan("tiny"));
@@ -51,6 +51,20 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+//  const fetchWebstatus = () => {
+//     fetch(`https://api.telegram.org/bot5351019129:AAG2i-XZSyI7GFPCk_8XAqOyBHzOxfb4lSo/getwebhookinfo`)
+//         .then((response) => response.json())
+//         .then((d) => {
+//             if(d.ok === false){
+//                 bot.api.setWebhook(`${domain}${botToken}`)
+//                 console.log(`set Webhook at ${domain}${botToken}`)
+//             } 
+//         })
+//         .catch((error) => {
+//             console.error(error)
+//         })
+// }
+// fetchWebstatus()
 app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
 app.listen(Number(process.env.PORT), async () => {
     // Make sure it is `https` not `http`!
