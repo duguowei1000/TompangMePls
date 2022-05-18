@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { webhookCallback } from "grammy";
 // import { bot } from "./bot";
 import { Bot } from "grammy";
+// import { Menu } from "@grammyjs/menu";
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
@@ -50,10 +51,10 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-app.use(`${botToken}`, webhookCallback(bot, "express"));
+app.use(`/${botToken}`, webhookCallback(bot, "express"));
 app.listen(Number(process.env.PORT), async () => {
     // Make sure it is `https` not `http`!
     console.log(`Example app listening on port ${port}!`);
-    console.log(`${domain}/${botToken}`);
+    console.log(`set Webhook at ${domain}/${botToken}`);
     await bot.api.setWebhook(`${domain}/${botToken}`);
 });
