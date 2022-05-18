@@ -27,15 +27,12 @@ const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
 const app = express();
 
-
 app.use(morgan("tiny"));
 app.use(methodOverride("_method")); //put Delete
 app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
 app.use(express.json());
 
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'))
-
-
 
 //async await
 app.post(`/${botToken}`, (req, res) => {
@@ -51,7 +48,7 @@ app.post(`/${botToken}`, (req, res) => {
  
  });
 
-app.use(`/${botToken}`, webhookCallback(bot, "express"));
+app.use(`${botToken}`, webhookCallback(bot, "express"));
 app.listen(Number(process.env.PORT), async () => {
   // Make sure it is `https` not `http`!
   console.log(`Example app listening on port ${port}!`)
