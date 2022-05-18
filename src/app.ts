@@ -40,8 +40,13 @@ bot.command("start", (ctx) => ctx.reply("Hello there!"));
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
 bot.on("message", (ctx) => ctx.reply("Got another message!"));
-// bot.start(); ###DONT USE THIS###
+// bot.start(); ###DONT USE THIS IN THE MIDDLE###
 
+
+bot.api.setWebhook(`${domain}/${botToken}`)
+console.log(`set Webhook at ${domain}/${botToken}`)
+
+bot.start()
 ///EXPRESS
 const app = express();
 
@@ -66,9 +71,14 @@ app.post(`/${botToken}`, (req, res) => {
  
  });
 
-app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
-app.listen(Number(process.env.PORT), async () => {
+ app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
+// app.listen(Number(process.env.PORT), async () => {
+//   console.log(`Example app listening on port ${port}!`)
+//   console.log(`set Webhook at ${domain}/${botToken}`)
+//   await bot.api.setWebhook(`${domain}/${botToken}`);
+// });
+
+// app.use(bot.api.webhookCallback(`/${botToken}`)) //must be at the end
+app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`)
-  console.log(`set Webhook at ${domain}/${botToken}`)
-  await bot.api.setWebhook(`${domain}/${botToken}`);
-});
+})
