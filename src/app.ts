@@ -5,26 +5,44 @@ import methodOverride from "method-override"
 import morgan from "morgan";
 import { webhookCallback } from "grammy";
 // import { bot } from "./bot";
-
-
-let port = Number(process.env.PORT);
-if (port == null || port == "") {
-  port = 3600;
-}
-console.log("port:",port)
-
 import { Bot } from "grammy";
-
-console.log(">>>",process.env)
-if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
-export const bot = new Bot(`${process.env.BOT_TOKEN}`);
-
-bot.command("start", (ctx) => ctx.reply("Hello there!"));
-bot.on("message", (ctx) => ctx.reply("Got another message!"));
+import { Menu } from "@grammyjs/menu";
 
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
+
+let port = Number(process.env.PORT);
+if (port == null ) {
+  port = 3600;
+}
+console.log("port:",port)
+console.log(">>>",process.env)
+
+
+//////BOT
+export const bot = new Bot(`${process.env.BOT_TOKEN}`);
+
+// // Create a simple menu.
+// const menu = new Menu("my-menu-identifier")
+//   .text("A", (ctx) => ctx.reply("You pressed A!")).row()
+//   .text("B", (ctx) => ctx.reply("You pressed B!"));
+
+// // Make it interactive.
+// bot.use(menu);
+
+if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
+
+
+bot.command("start", (ctx) => ctx.reply("Hello there!"));
+// bot.command("menu", async (ctx) => {
+//     // Send the menu.
+//     await ctx.reply("Check out this menu:", { reply_markup: menu });
+//   });
+bot.on("message", (ctx) => ctx.reply("Got another message!"));
+bot.start();
+
+///EXPRESS
 const app = express();
 
 app.use(morgan("tiny"));
