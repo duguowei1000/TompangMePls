@@ -40,7 +40,7 @@ bot.command("start", (ctx) => ctx.reply("Hello there!"));
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
 bot.on("message", (ctx) => ctx.reply("Got another message!"));
-bot.start();
+// bot.start();
 
 ///EXPRESS
 const app = express();
@@ -66,7 +66,7 @@ app.post(`/${botToken}`, (req, res) => {
  
  });
 
-app.use(`/${botToken}`, webhookCallback(bot, "express"));
+app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
 app.listen(Number(process.env.PORT), async () => {
   // Make sure it is `https` not `http`!
   console.log(`Example app listening on port ${port}!`)
