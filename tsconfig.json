@@ -4,6 +4,7 @@
     "module": "esnext",
     "lib": ["ES2021"],
     "outDir": "./dist/",
+    "rootDirs": ["./src/"], 
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
