@@ -13,10 +13,12 @@
   "license": "ISC",
   "dependencies": {
     "@grammyjs/menu": "^1.1.1",
+    "@grammyjs/storage-mongodb": "^2.0.0",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "grammy": "^1.8.3",
     "method-override": "^3.0.0",
+    "mongoose": "^6.3.3",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.16"
   },

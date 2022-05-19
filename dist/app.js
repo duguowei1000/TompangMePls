@@ -4,19 +4,22 @@ import express from "express";
 import methodOverride from "method-override";
 import morgan from "morgan";
 // import { bot } from "./bot";
-// import { Bot } from "grammy";
-// import { Menu } from "@grammyjs/menu";
 import { Bot, session } from "grammy";
 import { Menu, MenuRange } from "@grammyjs/menu";
+import mongoose from "mongoose";
+// import chatsController from "./controllers/ChatsController";
+import usersController from "./controllers/UsersController";
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
+const mongoURI = String(process.env.MONGO_URI);
+mongoose.connect(mongoURI, {}, () => {
+    console.log("connected to mongodb");
+});
 let port = Number(process.env.PORT);
 if (port == null) {
     port = 3600;
 }
-console.log("port:", port);
-console.log(">>>", process.env);
 if (process.env.BOT_TOKEN == null)
     throw Error("BOT_TOKEN is missing.");
 //////BOT
@@ -121,9 +124,10 @@ bot.catch(console.error.bind(console));
 const saveUserChoice = async (ctxt, i) => {
     console.log(ctxt.chat);
     console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay);
-    outputSuggestedMRT(ctxt);
+    await outputSuggestedMRT(ctxt);
 };
 const outputSuggestedMRT = async (ctxt) => {
+    await ctxt.reply("please wait while we find a driver..");
     // await ctxt.reply(
     //     ctxt.id,
     //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
@@ -154,7 +158,7 @@ timeMenu
 // timeMenu.register(opMRTmenu)    
 bot.use(timeMenu);
 bot.command("timemenu", async (ctx) => {
-    await ctx.reply("Please choose the time you want to reach your ${Location}!", { reply_markup: timeMenu });
+    await ctx.reply(`Please choose the time you want to reach your <b>Location</b>!`, { reply_markup: timeMenu });
 });
 ///////////////Submenu <> Going Back////////////////////////////////////////////////
 const root_menu = new Menu("root-menu")
@@ -175,16 +179,19 @@ root_menu.register(timeMenu);
 const rootText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
 bot.use(root_menu);
 bot.command("root", async (ctx) => {
-    await ctx.reply(rootText(), { reply_markup: root_menu });
+    await ctx.reply(rootText(), { reply_markup: root_menu, parse_mode: "HTML" });
 });
 ///////////////////////////////////////////////////////////////////////TESTING
 ////////////////////////////////////////////////////
+bot.hears("yoyoyo", async (ctx) => {
+    //await bot.api.sendMessage(427599753, "hihihihihi");
+});
 bot.command("add", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const item = ctx.match;
     console.log(item);
 });
-bot.command("menu", (ctx) => {
+bot.command("menu", async (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const msgtext = ctx.msg.text;
     console.log(msgtext);
@@ -222,6 +229,8 @@ app.use(morgan("tiny"));
 app.use(methodOverride("_method")); //put Delete
 app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
 app.use(express.json());
+// app.use("/chat", chatsController);
+app.use("/user", usersController);
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'));
 //async await
 app.post(`/${botToken}`, (req, res) => {
