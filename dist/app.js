@@ -30,7 +30,7 @@ const dishDatabase = [
 ];
 bot.use(session({
     initial() {
-        return { favoriteIds: [] };
+        return { favoriteIds: [], username: [] };
     },
 }));
 /**
@@ -117,6 +117,11 @@ bot.command("fav", async (ctx) => {
     await ctx.reply(`Those are your favorite dishes:\n\n${names}`);
 });
 bot.catch(console.error.bind(console));
+/////////////FUNCTION for saving username and choice of time///////////
+const saveUserChoice = (ctxt, i) => {
+    console.log(ctxt.chat);
+    console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay);
+};
 ////DYNAMIC MENU
 const menuDynamic = new Menu("dynamic");
 menuDynamic
@@ -126,7 +131,11 @@ menuDynamic
     const range = new MenuRange();
     for (let i = 0; i < scheduleDatabase.length - 1; i++) {
         range
-            .text(scheduleDatabase[i].timeDisplay, (ctx) => ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`))
+            .text(scheduleDatabase[i].timeDisplay, (ctx) => {
+            ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`);
+            //  console.log(ctx.chat)
+            saveUserChoice(ctx, i);
+        })
             .row();
     }
     return range;
@@ -162,6 +171,18 @@ bot.command("menu", (ctx) => {
     const msgtext = ctx.msg.text;
     console.log(msgtext);
 });
+bot.command("adduser", (ctx) => {
+    // `item` will be 'apple pie' if a user sends '/add apple pie'.
+    const username = ctx.chat;
+    console.log(username);
+});
+//OUTPUTS
+// {
+//     id: 427599753,
+//     first_name: 'mrdgw',
+//     username: 'mrdgw',
+//     type: 'private'
+//   }
 bot.command("start", (ctx) => ctx.reply("Hello there!"));
 // bot.command("menu", async (ctx) => {
 //     // Send the menu.
