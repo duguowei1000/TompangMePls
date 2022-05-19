@@ -151,15 +151,24 @@ bot.command("fav", async (ctx) => {
 
 bot.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
-const saveUserChoice = (ctxt, i) => { 
+const saveUserChoice = (ctxt, i: number) => { 
     console.log(ctxt.chat)
     console.log(`${ctxt.chat.username} chose Time >>>`,scheduleDatabase[i].timeDisplay)
+    
+    outputSuggestedMRT(ctxt)
 }
 
+const outputSuggestedMRT = async (ctxt) => {
+    // await ctxt.reply(
+    //     ctxt.id,
+    //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
+    //     // { parse_mode: "MarkdownV2" },
+    //   );
+}
 
 ////DYNAMIC MENU
-const menuDynamic = new Menu("dynamic");
-menuDynamic
+const timeMenu = new Menu("timeMenu");
+timeMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
     // Generate a part of the menu dynamically!
@@ -172,6 +181,7 @@ menuDynamic
             `You chose ${scheduleDatabase[i].timeDisplay}`)
             //  console.log(ctx.chat)
              saveUserChoice(ctx, i)
+             
 
         })
             .row();
@@ -179,24 +189,26 @@ menuDynamic
     return range;
 })  
     .back("Go Back")
-    .text("Cancel", (ctx) => ctx.deleteMessage());
+    // .text("Cancel", (ctx) => ctx.deleteMessage());
     
-bot.use(menuDynamic);
-bot.command("dynamic", async (ctx) => {
-    await ctx.reply("I created a dynamic menu!", { reply_markup: menuDynamic });
+// timeMenu.register(opMRTmenu)    
+bot.use(timeMenu);
+bot.command("timemenu", async (ctx) => {
+    await ctx.reply("Please choose the time you want to reach your ${Location}!", { reply_markup: timeMenu });
 });
 ///////////////Submenu <> Going Back////////////////////////////////////////////////
 const main = new Menu("root-menu")
-  .text("Welcome", (ctx) => ctx.reply("Hi!")).row()
-  .submenu("Credits", "credits-menu");
+  .text("Passenger", (ctx) => ctx.reply("Passenger"))
+  .text("Driver", (ctx) => ctx.reply("Driver")).row()
+  .submenu("timeSchedule", "timeMenu");
 
 const settings = new Menu("credits-menu")
   .text("Show Credits", (ctx) => ctx.reply("Powered by grammY"))
   .back("Go Back");
 
-main.register(settings);
+main.register(timeMenu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
-settings.register(menuDynamic)
+// settings.register(timeMenu)
 
   bot.use(main);
   bot.command("submenu", async (ctx) => {

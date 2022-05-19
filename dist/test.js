@@ -79,7 +79,7 @@ const settings = new Menu("credits-menu")
     .back("Go Back");
 main.register(settings);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
-settings.register(menuDynamic);
+settings.register(timeMenu);
 bot.use(main);
 bot.command("submenu", async (ctx) => {
     await ctx.reply("Please state the time that you will want to reach AREA-1", { reply_markup: main });

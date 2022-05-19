@@ -168,7 +168,7 @@ const settings = new Menu("credits-menu")
 
 main.register(settings);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
-settings.register(menuDynamic)
+settings.register(timeMenu)
 
   bot.use(main);
   bot.command("submenu", async (ctx) => {
