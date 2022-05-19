@@ -45,6 +45,10 @@ const scheduleDatabase = [
     { time: 930, timeDisplay: "930" },
     { time: 1000, timeDisplay: "1000" },
     { time: 1030, timeDisplay: "1030" },
+    { time: 1100, timeDisplay: "1100" },
+    { time: 1230, timeDisplay: "1230" },
+    { time: 1300, timeDisplay: "1300" },
+    { time: 1330, timeDisplay: "1330" },
 ];
 // Create a dynamic menu that lists all dishes in the dishDatabase,
 // one button each
@@ -127,10 +131,25 @@ menuDynamic
     }
     return range;
 })
+    .back("Go Back")
     .text("Cancel", (ctx) => ctx.deleteMessage());
 bot.use(menuDynamic);
-bot.command("Dynamic", async (ctx) => {
+bot.command("dynamic", async (ctx) => {
     await ctx.reply("I created a dynamic menu!", { reply_markup: menuDynamic });
+});
+///////////////Submenu <> Going Back////////////////////////////////////////////////
+const main = new Menu("root-menu")
+    .text("Welcome", (ctx) => ctx.reply("Hi!")).row()
+    .submenu("Credits", "credits-menu");
+const settings = new Menu("credits-menu")
+    .text("Show Credits", (ctx) => ctx.reply("Powered by grammY"))
+    .back("Go Back");
+main.register(settings);
+// main.register(settings, "dynamic");// Optionally, set a different parent.
+settings.register(menuDynamic);
+bot.use(main);
+bot.command("submenu", async (ctx) => {
+    await ctx.reply("Please state the time that you will want to reach AREA-1", { reply_markup: main });
 });
 ///////////////////////////////////////////////////////////////////////TESTING
 bot.command("add", (ctx) => {
