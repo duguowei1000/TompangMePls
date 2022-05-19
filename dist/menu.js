@@ -19,20 +19,6 @@ console.log("port:", port);
 console.log(">>>", process.env);
 if (process.env.BOT_TOKEN == null)
     throw Error("BOT_TOKEN is missing.");
-//////BOT
-// export const bot = new Bot(`${process.env.BOT_TOKEN}`);
-const bot = new Bot(`${process.env.BOT_TOKEN}`);
-const dishDatabase = [
-    { id: "pasta", name: "Pasta" },
-    { id: "pizza", name: "Pizza" },
-    { id: "sushi", name: "Sushi" },
-    { id: "entrct", name: "Entrecôte" },
-];
-bot.use(session({
-    initial() {
-        return { favoriteIds: [] };
-    },
-}));
 /**
  * All known dishes. Users can rate them to store which ones are their favorite
  * dishes.
@@ -40,12 +26,18 @@ bot.use(session({
  * They can also decide to delete them. If a user decides to delete a dish, it
  * will be gone for everyone.
  */
-const scheduleDatabase = [
-    { time: 900, timeDisplay: "900" },
-    { time: 930, timeDisplay: "930" },
-    { time: 1000, timeDisplay: "1000" },
-    { time: 1030, timeDisplay: "1030" },
+const dishDatabase = [
+    { id: "pasta", name: "Pasta" },
+    { id: "pizza", name: "Pizza" },
+    { id: "sushi", name: "Sushi" },
+    { id: "entrct", name: "Entrecôte" },
 ];
+const bot = new Bot(botToken);
+bot.use(session({
+    initial() {
+        return { favoriteIds: [] };
+    },
+}));
 // Create a dynamic menu that lists all dishes in the dishDatabase,
 // one button each
 const mainText = "Pick a dish to rate it!";
@@ -113,25 +105,6 @@ bot.command("fav", async (ctx) => {
     await ctx.reply(`Those are your favorite dishes:\n\n${names}`);
 });
 bot.catch(console.error.bind(console));
-////DYNAMIC MENU
-const menuDynamic = new Menu("dynamic");
-menuDynamic
-    .url("About", "https://grammy.dev/plugins/menu").row()
-    .dynamic(() => {
-    // Generate a part of the menu dynamically!
-    const range = new MenuRange();
-    for (let i = 0; i < scheduleDatabase.length - 1; i++) {
-        range
-            .text(scheduleDatabase[i].timeDisplay, (ctx) => ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`))
-            .row();
-    }
-    return range;
-})
-    .text("Cancel", (ctx) => ctx.deleteMessage());
-bot.use(menuDynamic);
-bot.command("Dynamic", async (ctx) => {
-    await ctx.reply("I created a dynamic menu!", { reply_markup: menuDynamic });
-});
 ///////////////////////////////////////////////////////////////////////TESTING
 bot.command("add", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.

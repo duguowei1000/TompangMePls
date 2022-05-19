@@ -24,7 +24,43 @@ if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
 
 //////BOT
 // export const bot = new Bot(`${process.env.BOT_TOKEN}`);
-const bot = new Bot<MyContext>(`${process.env.BOT_TOKEN}`);
+
+// // Create a simple menu.
+// const menu = new Menu("my-menu-identifier")
+//   .text("A", (ctx) => ctx.reply("You pressed A!")).row()
+//   .text("B", (ctx) => ctx.reply("You pressed B!"));
+
+// // Make it interactive.
+// bot.use(menu);
+
+// bot.command("startmenu", async (ctx) => {
+//   // Send the menu.
+//   await ctx.reply("Check out this menu:", { reply_markup: menu });
+// });
+// ////
+
+// Create a button with the user's name, which will greet them when pressed.
+
+// bot.on("message", (ctx) => {
+//     // `txt` will be a `string` when processing text messages.
+//     // It will be `undefined` if the received message does not have any message text,
+//     // e.g. photos, stickers, and other messages.
+//     // const txt = ctx.message.text;
+//     const txt = ctx.message.chat;
+//     console.log(txt)
+//   });
+// const menu = new Menu("greet-me")
+//   .text(
+//     (ctx) => `Greet ${ctx.from?.first_name ?? "me"}!`, // dynamic label
+//     (ctx) => ctx.reply(`Hello ${ctx.from.first_name}!`), // handler
+//   );
+//   bot.use(menu);
+//   bot.command("startmenu", async (ctx) => {
+//   // Send the menu.
+//   await ctx.reply("Check out this menu:", { reply_markup: menu });
+// });
+///////////////////////////////////
+
 
 /** This is how the dishes look that this bot is managing */
 interface Dish {
@@ -37,19 +73,6 @@ interface SessionData {
 }
 type MyContext = Context & SessionFlavor<SessionData>;
 
-const dishDatabase: Dish[] = [
-    { id: "pasta", name: "Pasta" },
-    { id: "pizza", name: "Pizza" },
-    { id: "sushi", name: "Sushi" },
-    { id: "entrct", name: "Entrecôte" },
-];
-
-bot.use(session({
-    initial(): SessionData {
-        return { favoriteIds: [] };
-    },
-}));
-
 /**
  * All known dishes. Users can rate them to store which ones are their favorite
  * dishes.
@@ -57,13 +80,20 @@ bot.use(session({
  * They can also decide to delete them. If a user decides to delete a dish, it
  * will be gone for everyone.
  */
-const scheduleDatabase = [
-
-    { time: 900, timeDisplay: "900" },
-    { time: 930, timeDisplay: "930" },
-    { time: 1000, timeDisplay: "1000" },
-    { time: 1030, timeDisplay: "1030" },
+const dishDatabase: Dish[] = [
+    { id: "pasta", name: "Pasta" },
+    { id: "pizza", name: "Pizza" },
+    { id: "sushi", name: "Sushi" },
+    { id: "entrct", name: "Entrecôte" },
 ];
+
+const bot = new Bot<MyContext>(botToken);
+
+bot.use(session({
+    initial(): SessionData {
+        return { favoriteIds: [] };
+    },
+}));
 
 // Create a dynamic menu that lists all dishes in the dishDatabase,
 // one button each
@@ -144,25 +174,6 @@ bot.command("fav", async (ctx) => {
 });
 
 bot.catch(console.error.bind(console));
-////DYNAMIC MENU
-const menuDynamic = new Menu("dynamic");
-menuDynamic
-    .url("About", "https://grammy.dev/plugins/menu").row()
-    .dynamic(() => {
-    // Generate a part of the menu dynamically!
-    const range = new MenuRange();
-    for (let i = 0; i < scheduleDatabase.length -1; i++) {
-        range
-            .text(scheduleDatabase[i].timeDisplay, (ctx) => ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`))
-            .row();
-    }
-    return range;
-})
-    .text("Cancel", (ctx) => ctx.deleteMessage());
-bot.use(menuDynamic);
-bot.command("Dynamic", async (ctx) => {
-    await ctx.reply("I created a dynamic menu!", { reply_markup: menuDynamic });
-});
 
 
 ///////////////////////////////////////////////////////////////////////TESTING
