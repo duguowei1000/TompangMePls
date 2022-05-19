@@ -6,7 +6,7 @@ import morgan from "morgan";
 // import { bot } from "./bot";
 // import { Bot } from "grammy";
 // import { Menu } from "@grammyjs/menu";
-import { Bot, session } from "grammy";
+import { Bot, session, InlineKeyboard, Keyboard } from "grammy";
 import { Menu } from "@grammyjs/menu";
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
@@ -84,3 +84,40 @@ bot.use(main);
 bot.command("submenu", async (ctx) => {
     await ctx.reply("Please state the time that you will want to reach AREA-1", { reply_markup: main });
 });
+//////INLINE KEYBOARD
+const inlineKeyboard = new InlineKeyboard().text("click", "click-payload");
+// Send a keyboard along with a message.
+bot.command("inline", async (ctx) => {
+    await ctx.reply("Curious? Click me!", { reply_markup: inlineKeyboard });
+});
+// Wait for click events with specific callback data.
+bot.callbackQuery("click-payload", async (ctx) => {
+    //   await ctx.answerCallbackQuery({
+    //     text: "You were curious, indeed!",
+    //   });
+    await ctx.reply("Hello hello", { reply_markup: inlineKeyboard });
+});
+//////////////// POSTAL CODE//////
+const keyboard = new Keyboard()
+    .text("7").text("8").text("9").text("*").row()
+    .text("4").text("5").text("6").text("/").row()
+    .text("1").text("2").text("3").text("-").row()
+    .text("0").text(".").text("=").text("+");
+//   const root_menu = new InlineKeyboard()
+//         .text("Passenger", "Passenger-payload")
+//         .text("Driver", "Driver-payload")
+//         .text("timeschedule", "timeschedule-payload")
+// // Send a keyboard along with a message.
+// bot.command("inline", async (ctx) => {
+//   await ctx.reply("Curious? Click me!", { reply_markup: root_menu });
+// });
+// // Wait for click events with specific callback data.
+// bot.callbackQuery("Passenger-payload", async (ctx) => {
+// await ctx.reply("Passenger", { reply_markup: timeMenu });
+// });
+// bot.callbackQuery("Driver-payload", async (ctx) => {
+//     await ctx.reply("Driver", { reply_markup: timeMenu });
+//     });
+// bot.callbackQuery("timeschedule-payload", async (ctx) => {
+// await ctx.reply("timeschedule", { reply_markup: timeMenu });
+// });

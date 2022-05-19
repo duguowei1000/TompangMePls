@@ -118,7 +118,7 @@ bot.command("fav", async (ctx) => {
 });
 bot.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
-const saveUserChoice = (ctxt, i) => {
+const saveUserChoice = async (ctxt, i) => {
     console.log(ctxt.chat);
     console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay);
     outputSuggestedMRT(ctxt);
@@ -130,6 +130,7 @@ const outputSuggestedMRT = async (ctxt) => {
     //     // { parse_mode: "MarkdownV2" },
     //   );
 };
+////////////////OUTPUT MENU///////////
 ////DYNAMIC MENU
 const timeMenu = new Menu("timeMenu");
 timeMenu
@@ -156,21 +157,28 @@ bot.command("timemenu", async (ctx) => {
     await ctx.reply("Please choose the time you want to reach your ${Location}!", { reply_markup: timeMenu });
 });
 ///////////////Submenu <> Going Back////////////////////////////////////////////////
-const main = new Menu("root-menu")
+const root_menu = new Menu("root-menu")
     .text("Passenger", (ctx) => ctx.reply("Passenger"))
     .text("Driver", (ctx) => ctx.reply("Driver")).row()
-    .submenu("timeSchedule", "timeMenu");
+    .submenu("timeSchedule", "timeMenu", // navigation target menu
+(ctx) => ctx.editMessageText("Please choose the time you want to reach your ${Location}!", { parse_mode: "HTML" }));
 const settings = new Menu("credits-menu")
     .text("Show Credits", (ctx) => ctx.reply("Powered by grammY"))
-    .back("Go Back");
-main.register(timeMenu);
+    .back("Go Back").row();
+bot.use(settings);
+bot.command("settings", async (ctx) => {
+    await ctx.reply("Are you a Driver or Passenger", { reply_markup: settings });
+});
+root_menu.register(timeMenu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
 // settings.register(timeMenu)
-bot.use(main);
-bot.command("submenu", async (ctx) => {
-    await ctx.reply("Please state the time that you will want to reach AREA-1", { reply_markup: main });
+const rootText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
+bot.use(root_menu);
+bot.command("root", async (ctx) => {
+    await ctx.reply(rootText(), { reply_markup: root_menu });
 });
 ///////////////////////////////////////////////////////////////////////TESTING
+////////////////////////////////////////////////////
 bot.command("add", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const item = ctx.match;
