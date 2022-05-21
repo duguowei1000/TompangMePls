@@ -1,13 +1,41 @@
-import * as dotenv from "dotenv";
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv = __importStar(require("dotenv"));
 dotenv.config();
-import express from "express";
-import methodOverride from "method-override";
-import morgan from "morgan";
+const express_1 = __importDefault(require("express"));
+const method_override_1 = __importDefault(require("method-override"));
+const morgan_1 = __importDefault(require("morgan"));
 // import { bot } from "./bot";
 // import { Bot } from "grammy";
 // import { Menu } from "@grammyjs/menu";
-import { Bot, session } from "grammy";
-import { Menu, MenuRange } from "@grammyjs/menu";
+const grammy_1 = require("grammy");
+const menu_1 = require("@grammyjs/menu");
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
@@ -32,8 +60,8 @@ const dishDatabase = [
     { id: "sushi", name: "Sushi" },
     { id: "entrct", name: "Entrecôte" },
 ];
-const bot = new Bot(botToken);
-bot.use(session({
+const bot = new grammy_1.Bot(botToken);
+bot.use((0, grammy_1.session)({
     initial() {
         return { favoriteIds: [] };
     },
@@ -41,9 +69,9 @@ bot.use(session({
 // Create a dynamic menu that lists all dishes in the dishDatabase,
 // one button each
 const mainText = "Pick a dish to rate it!";
-const mainMenu = new Menu("food");
+const mainMenu = new menu_1.Menu("food");
 mainMenu.dynamic(() => {
-    const range = new MenuRange();
+    const range = new menu_1.MenuRange();
     for (const dish of dishDatabase) {
         range.submenu({ text: dish.name, payload: dish.id }, // label and payload
         "dish", // navigation target menu
@@ -54,7 +82,7 @@ mainMenu.dynamic(() => {
 });
 // Create the sub-menu that is used for rendering dishes
 const dishText = (dish) => `<b>${dish}</b>\n\nYour rating:`;
-const dishMenu = new Menu("dish");
+const dishMenu = new menu_1.Menu("dish");
 dishMenu.dynamic((ctx) => {
     const dish = ctx.match;
     if (typeof dish !== "string")
@@ -63,7 +91,7 @@ dishMenu.dynamic((ctx) => {
 });
 /** Creates a menu that can render any given dish */
 function createDishMenu(dish) {
-    return new MenuRange()
+    return new menu_1.MenuRange()
         .text({
         text: (ctx) => ctx.session.favoriteIds.includes(dish) ? "Yummy!" : "Meh.",
         payload: dish,
@@ -132,11 +160,11 @@ bot.on("message", (ctx) => {
 });
 bot.start();
 ///EXPRESS
-const app = express();
-app.use(morgan("tiny"));
-app.use(methodOverride("_method")); //put Delete
-app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
-app.use(express.json());
+const app = (0, express_1.default)();
+app.use((0, morgan_1.default)("tiny"));
+app.use((0, method_override_1.default)("_method")); //put Delete
+app.use(express_1.default.urlencoded({ extended: false })); //Parse URL-encoded bodies
+app.use(express_1.default.json());
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'));
 //async await
 app.post(`/${botToken}`, (req, res) => {

@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "ESNEXT",
-    "module": "esnext",
+    "module": "commonjs",
     "lib": ["ES2021"],
     "outDir": "./dist/",
   "rootDirs": ["./src/"],
     "strict": true,
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

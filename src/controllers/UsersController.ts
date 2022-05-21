@@ -1,9 +1,7 @@
-import { defaultMaxListeners } from "events";
 import express from "express";
 import User from "../models/User";
 const router = express.Router();
 // const bcrypt = require("bcrypt");
-
 
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
@@ -25,11 +23,37 @@ router.get("/seed", async (req, res) => {
             // password: bcrypt.hashSync("12345", saltRounds),
           },
         ]);
-        res.send("Seed")
+        res.send("Users Seed")
       } catch (error) {
           console.log(error);
       }
 })
+
+const saveUserChoice = async (ctxt, i: number) => {
+  console.log(ctxt.chat)
+  console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay)
+
+  await outputSuggestedMRT(ctxt)
+}
+
+router.post("/", async (req, res) => {
+  // console.log("req.body", req.body);
+  try {
+    const createdListing = await User.create(req.body);
+    const lister = await User.findOne({ username: req.body.lister });
+
+    lister.listings.push(createdListing._id);
+    await lister.save();
+
+    res.status(200).send(createdListing);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+export default router;
+
 
 
 //console.log(StatusCodes.UNAUTHORISED)
@@ -107,4 +131,5 @@ router.get("/seed", async (req, res) => {
 //     res.send("logout")
 //   })
 
-export default router;
+
+// module.exports = router;

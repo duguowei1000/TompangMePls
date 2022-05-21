@@ -4,13 +4,12 @@ import express from "express";
 import methodOverride from "method-override"
 import morgan from "morgan";
 import { webhookCallback } from "grammy";
-// import { bot } from "./bot";
 import { Bot, Context, session, SessionFlavor, Composer, InlineKeyboard } from "grammy";
 import { Menu, MenuRange } from "@grammyjs/menu";
 import mongoose from "mongoose";
-// import chatsController from "./controllers/ChatsController";
+import chatsController from "./controllers/ChatsController";
 import usersController from "./controllers/UsersController";
-
+import  bot  from "./bot";
 
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
@@ -22,17 +21,12 @@ mongoose.connect(mongoURI, {}, () => {
 });
 
 let port = Number(process.env.PORT);
-if (port == null ) {
-  port = 3600;
+if (port == null) {
+    port = 3600;
 }
-if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
-
-
-
-
 //////BOT
 // export const bot = new Bot(`${process.env.BOT_TOKEN}`);
-const bot = new Bot<MyContext>(`${process.env.BOT_TOKEN}`);
+// const bot = new Bot<MyContext>(`${process.env.BOT_TOKEN}`);
 
 /** This is how the dishes look that this bot is managing */
 interface Dish {
@@ -159,12 +153,7 @@ bot.command("fav", async (ctx) => {
 
 bot.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
-const saveUserChoice = async (ctxt, i: number) => { 
-    console.log(ctxt.chat)
-    console.log(`${ctxt.chat.username} chose Time >>>`,scheduleDatabase[i].timeDisplay)
 
-    await outputSuggestedMRT(ctxt)
-}
 
 const outputSuggestedMRT = async (ctxt) => {
 
@@ -182,31 +171,30 @@ const timeMenu = new Menu("timeMenu");
 timeMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
-    // Generate a part of the menu dynamically!
-    const range = new MenuRange();
-    for (let i = 0; i < scheduleDatabase.length -1; i++) {
-        range
-            .text(scheduleDatabase[i].timeDisplay, (ctx) => 
-            {
-            ctx.reply(
-            `You chose ${scheduleDatabase[i].timeDisplay}`)
-            //  console.log(ctx.chat)
-             saveUserChoice(ctx, i)
-            
-             
+        // Generate a part of the menu dynamically!
+        const range = new MenuRange();
+        for (let i = 0; i < scheduleDatabase.length - 1; i++) {
+            range
+                .text(scheduleDatabase[i].timeDisplay, (ctx) => {
+                    ctx.reply(
+                        `You chose ${scheduleDatabase[i].timeDisplay}`)
+                    //  console.log(ctx.chat)
+                    saveUserChoice(ctx, i)
 
-        })
-            .row();
+
+
+                })
+                .row();
+        }
+        return range;
+
     }
-    return range;
-    
-}
 
-    
-)  
+
+    )
     .back("Go Back")
-    // .text("Cancel", (ctx) => ctx.deleteMessage());
-    
+// .text("Cancel", (ctx) => ctx.deleteMessage());
+
 // timeMenu.register(opMRTmenu)    
 bot.use(timeMenu);
 bot.command("timemenu", async (ctx) => {
@@ -214,34 +202,34 @@ bot.command("timemenu", async (ctx) => {
 });
 ///////////////Submenu <> Going Back////////////////////////////////////////////////
 const root_menu = new Menu("root-menu")
-  .text("Passenger", (ctx) => ctx.reply("Passenger"))
-  .text("Driver", (ctx) => ctx.reply("Driver")).row()
-  .submenu(
-  "timeSchedule", 
-  "timeMenu", // navigation target menu
-  (ctx) => ctx.editMessageText("Please choose the time you want to reach your ${Location}!", { parse_mode: "HTML" }), // handler
-  )
+    .text("Passenger", (ctx) => ctx.reply("Passenger"))
+    .text("Driver", (ctx) => ctx.reply("Driver")).row()
+    .submenu(
+        "timeSchedule",
+        "timeMenu", // navigation target menu
+        (ctx) => ctx.editMessageText("Please choose the time you want to reach your ${Location}!", { parse_mode: "HTML" }), // handler
+    )
 
 
 const settings = new Menu("credits-menu")
-  .text("Show Credits", (ctx) => ctx.reply("Powered by grammY", 
-))
-  .back("Go Back").row();
-  bot.use(settings)
-  bot.command("settings", async (ctx) => {
+    .text("Show Credits", (ctx) => ctx.reply("Powered by grammY",
+    ))
+    .back("Go Back").row();
+bot.use(settings)
+bot.command("settings", async (ctx) => {
     await ctx.reply("Are you a Driver or Passenger", { reply_markup: settings });
-    
+
 });
 
 root_menu.register(timeMenu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
 // settings.register(timeMenu)
-  
-  const rootText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
-  bot.use(root_menu);
-  bot.command("root", async (ctx) => {
-    await ctx.reply(rootText(), { reply_markup: root_menu , parse_mode:"HTML"  });
-    
+
+const rootText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
+bot.use(root_menu);
+bot.command("root", async (ctx) => {
+    await ctx.reply(rootText(), { reply_markup: root_menu, parse_mode: "HTML" });
+
 });
 
 
@@ -252,7 +240,7 @@ root_menu.register(timeMenu);
 
 ////////////////////////////////////////////////////
 bot.hears("yoyoyo", async (ctx) => {
-   //await bot.api.sendMessage(427599753, "hihihihihi");
+    //await bot.api.sendMessage(427599753, "hihihihihi");
 
 })
 
@@ -260,26 +248,26 @@ bot.command("add", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const item = ctx.match;
     console.log(item)
-  });
-bot.command("menu", async(ctx) => {
-// `item` will be 'apple pie' if a user sends '/add apple pie'.
+});
+bot.command("menu", async (ctx) => {
+    // `item` will be 'apple pie' if a user sends '/add apple pie'.
 
-const msgtext = ctx.msg.text;
-console.log(msgtext)
+    const msgtext = ctx.msg.text;
+    console.log(msgtext)
 });
 
 bot.command("adduser", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const username = ctx.chat
     console.log(username)
-    });
-    //OUTPUTS
-    // {
-    //     id: 427599753,
-    //     first_name: 'mrdgw',
-    //     username: 'mrdgw',
-    //     type: 'private'
-    //   }
+});
+//OUTPUTS
+// {
+//     id: 427599753,
+//     first_name: 'mrdgw',
+//     username: 'mrdgw',
+//     type: 'private'
+//   }
 
 bot.command("start", (ctx) => ctx.reply("Hello there!"));
 // bot.command("menu", async (ctx) => {
@@ -297,7 +285,7 @@ bot.on("message", (ctx) => {
     // Now `str` is of type `string`.
     const str = ctx.session;
     console.log(str)
-  });
+});
 
 bot.start()
 ///EXPRESS
@@ -307,24 +295,24 @@ app.use(morgan("tiny"));
 app.use(methodOverride("_method")); //put Delete
 app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
 app.use(express.json());
-// app.use("/chat", chatsController);
+app.use("/chat", chatsController);
 app.use("/user", usersController);
 
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'))
 
 //async await
 app.post(`/${botToken}`, (req, res) => {
-  
+
     try {
-     console.log('reqbody', req.body)
-    //  bot.handleUpdate(req.body, res)
-     res.json({ message: req.body });
- 
+        console.log('reqbody', req.body)
+        //  bot.handleUpdate(req.body, res)
+        res.json({ message: req.body });
+
     } catch (error) {
-      res.status(400).json({ error: error.message });
-   }
- 
- });
+        res.status(400).json({ error: error.message });
+    }
+
+});
 
 //  app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
 // app.listen(Number(process.env.PORT), async () => {
@@ -335,5 +323,5 @@ app.post(`/${botToken}`, (req, res) => {
 
 // app.use(bot.api.webhookCallback(`/${botToken}`)) //must be at the end
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}!`)
+    console.log(`Example app listening on port ${port}!`)
 })

@@ -1,12 +1,17 @@
-import express from "express";
-import User from "../models/User";
-const router = express.Router();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const User_1 = __importDefault(require("../models/User"));
+const router = express_1.default.Router();
 // const bcrypt = require("bcrypt");
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
     try {
-        await User.deleteMany({});
-        await User.create([
+        await User_1.default.deleteMany({});
+        await User_1.default.create([
             {
                 username: "mrdgw",
                 chatid: 427599753,
@@ -22,12 +27,31 @@ router.get("/seed", async (req, res) => {
                 // password: bcrypt.hashSync("12345", saltRounds),
             },
         ]);
-        res.send("Seed");
+        res.send("Users Seed");
     }
     catch (error) {
         console.log(error);
     }
 });
+const saveUserChoice = async (ctxt, i) => {
+    console.log(ctxt.chat);
+    console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay);
+    await outputSuggestedMRT(ctxt);
+};
+router.post("/", async (req, res) => {
+    // console.log("req.body", req.body);
+    try {
+        const createdListing = await User_1.default.create(req.body);
+        const lister = await User_1.default.findOne({ username: req.body.lister });
+        lister.listings.push(createdListing._id);
+        await lister.save();
+        res.status(200).send(createdListing);
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+exports.default = router;
 //console.log(StatusCodes.UNAUTHORISED)
 // //* see login form
 // router.get("/form", (req, res) => {
@@ -91,4 +115,4 @@ router.get("/seed", async (req, res) => {
 //     req.session.destroy();
 //     res.send("logout")
 //   })
-export default router;
+// module.exports = router;
