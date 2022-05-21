@@ -35,7 +35,7 @@ const grammy_1 = require("grammy");
 const menu_1 = require("@grammyjs/menu");
 const mongoose_1 = __importDefault(require("mongoose"));
 const ChatsController_1 = __importDefault(require("./controllers/ChatsController"));
-const UsersController_1 = __importDefault(require("./controllers/UsersController"));
+const UsersController_1 = __importStar(require("./controllers/UsersController"));
 const bot_1 = __importDefault(require("./bot"));
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
@@ -165,7 +165,8 @@ timeMenu
             .text(scheduleDatabase[i].timeDisplay, (ctx) => {
             ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`);
             //  console.log(ctx.chat)
-            saveUserChoice(ctx, i);
+            const time = scheduleDatabase[i].timeDisplay;
+            (0, UsersController_1.saveUserChoice)(ctx, time);
         })
             .row();
     }

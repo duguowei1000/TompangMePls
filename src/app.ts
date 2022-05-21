@@ -8,10 +8,11 @@ import { Bot, Context, session, SessionFlavor, Composer, InlineKeyboard } from "
 import { Menu, MenuRange } from "@grammyjs/menu";
 import mongoose from "mongoose";
 import chatsController from "./controllers/ChatsController";
-import usersController from "./controllers/UsersController";
+import usersController, { saveUserChoice} from "./controllers/UsersController";
 import  bot  from "./bot";
 
 //Parameters
+
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
 
@@ -179,7 +180,8 @@ timeMenu
                     ctx.reply(
                         `You chose ${scheduleDatabase[i].timeDisplay}`)
                     //  console.log(ctx.chat)
-                    saveUserChoice(ctx, i)
+                    const time = scheduleDatabase[i].timeDisplay
+                    saveUserChoice(ctx, time)
 
 
 

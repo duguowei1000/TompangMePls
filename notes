@@ -1,0 +1,20 @@
+// export default affects the syntax when importing the exported "thing", when allowing to import, whatever has been exported, by choosing the name in the import itself, no matter what was the name when it was exported, simply because it's marked as the "default".
+
+// A useful use case, which I like (and use), is allowing to export an anonymous function without explicitly having to name it, and only when that function is imported, it must be given a name:
+
+// Example:
+// Export 2 functions, one is default:
+// export function divide( x ){
+//     return x / 2;
+// }
+
+// // only one 'default' function may be exported and the rest (above) must be named
+// export default function( x ){  // <---- declared as a default function
+//     return x * x;
+// }
+// Import the above functions. Making up a name for the default one:
+// // The default function should be the first to import (and named whatever)
+// import square, {divide} from './module_1.js'; // I named the default "square" 
+
+// console.log( square(2), divide(2) ); // 4, 1
+// When the {} syntax is used to import a function (or variable) it means that whatever is imported was already named when exported, so one must import it by the exact same name, or else the import wouldn't work.

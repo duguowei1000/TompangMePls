@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
 const User_1 = __importDefault(require("../models/User"));
 const router = express_1.default.Router();
@@ -33,11 +34,30 @@ router.get("/seed", async (req, res) => {
         console.log(error);
     }
 });
-const saveUserChoice = async (ctxt, i) => {
-    console.log(ctxt.chat);
-    console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay);
-    await outputSuggestedMRT(ctxt);
+const saveUserChoice = async (ctxt, time) => {
+    try {
+        const userDestination = await User_1.default.findOne({ destination: ctxt.chat.destination });
+        if (userDestination) {
+            console.log(`You have already chosen a ${ctxt.chat.destination}, update your choice?`);
+        }
+        else {
+            console.log(ctxt.chat);
+            console.log(`${ctxt.chat.username} chose Time >>> ${time}`); //scheduleDatabase[i].timeDisplay)
+            const createdListing = await User_1.default.create({
+                chatid: `${ctxt.chat.id}`,
+                username: `${ctxt.chat.username}`,
+                timeslot: Date.now(),
+                destination: "Jurong East"
+            });
+            console.log("created New entry to DB", createdListing);
+        }
+    }
+    catch (error) {
+        console.log("error");
+    }
+    // await outputSuggestedMRT(ctxt)
 };
+exports.saveUserChoice = saveUserChoice;
 router.post("/", async (req, res) => {
     // console.log("req.body", req.body);
     try {

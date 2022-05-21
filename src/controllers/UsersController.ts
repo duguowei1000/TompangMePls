@@ -29,11 +29,30 @@ router.get("/seed", async (req, res) => {
       }
 })
 
-const saveUserChoice = async (ctxt, i: number) => {
-  console.log(ctxt.chat)
-  console.log(`${ctxt.chat.username} chose Time >>>`, scheduleDatabase[i].timeDisplay)
+const saveUserChoice = async (ctxt, time) => {
 
-  await outputSuggestedMRT(ctxt)
+  try{
+  const userDestination = await User.findOne({ destination: ctxt.chat.destination });
+  if (userDestination){
+    console.log(`You have already chosen a ${ctxt.chat.destination}, update your choice?`) ;
+  } 
+  else{
+    console.log(ctxt.chat)
+    console.log(`${ctxt.chat.username} chose Time >>> ${time}`, )//scheduleDatabase[i].timeDisplay)
+    const createdListing = await User.create({ 
+      chatid: `${ctxt.chat.id}`,
+      username: `${ctxt.chat.username}`,
+      timeslot: Date.now(), 
+      destination: "Jurong East" 
+    });
+    console.log("created New entry to DB",createdListing)
+  }
+
+}
+catch (error) {
+  console.log("error")
+}
+  // await outputSuggestedMRT(ctxt)
 }
 
 router.post("/", async (req, res) => {
@@ -52,7 +71,8 @@ router.post("/", async (req, res) => {
 });
 
 
-export default router;
+export default router
+export { saveUserChoice}
 
 
 
