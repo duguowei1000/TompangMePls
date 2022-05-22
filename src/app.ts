@@ -292,7 +292,7 @@ bot.on("message", (ctx) => {
     console.log(str)
 });
 
-bot.start()
+// bot.start()
 ///EXPRESS
 const app = express();
 
@@ -320,16 +320,17 @@ app.post(`/${botToken}`, (req, res) => {
 });
 
 
-// app.listen(Number(process.env.PORT), async () => {
-//   console.log(`Example app listening on port ${port}!`)
-//   console.log(`set Webhook at ${domain}/${botToken}`)
-//   await bot.api.setWebhook(`${domain}/${botToken}`);
-// });
+
 // bot.api.setWebhook(`${botToken}`).then(() => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
 
 app.use(`/${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}!`)
-})
+app.listen(port, async () => {
+  console.log(`Example app listening on port ${port}!`)
+  console.log(`set Webhook at ${domain}/${botToken}`)
+  await bot.api.setWebhook(`${domain}/${botToken}`);
+});
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}!`)
+// })

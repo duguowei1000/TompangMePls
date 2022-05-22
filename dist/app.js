@@ -245,7 +245,7 @@ bot_1.default.on("message", (ctx) => {
     const str = ctx.session;
     console.log(str);
 });
-bot_1.default.start();
+// bot.start()
 ///EXPRESS
 const app = (0, express_1.default)();
 app.use((0, morgan_1.default)("tiny"));
@@ -266,15 +266,15 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-// app.listen(Number(process.env.PORT), async () => {
-//   console.log(`Example app listening on port ${port}!`)
-//   console.log(`set Webhook at ${domain}/${botToken}`)
-//   await bot.api.setWebhook(`${domain}/${botToken}`);
-// });
 // bot.api.setWebhook(`${botToken}`).then(() => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
 app.use(`/${botToken}`, (0, grammy_1.webhookCallback)(bot_1.default, "express")); //no need "/"//must be at the end
-app.listen(port, () => {
+app.listen(port, async () => {
     console.log(`Example app listening on port ${port}!`);
+    console.log(`set Webhook at ${domain}/${botToken}`);
+    await bot_1.default.api.setWebhook(`${domain}/${botToken}`);
 });
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}!`)
+// })
