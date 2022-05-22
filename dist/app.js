@@ -268,7 +268,7 @@ if (port == null) {
 //     const str = ctx.session;
 //     console.log(str)
 // });
-const production = true;
+const production = false;
 if (!production) {
     console.log("doing local test");
     console.log("bot.start()");

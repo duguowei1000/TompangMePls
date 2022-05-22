@@ -38,10 +38,13 @@ const saveUserChoice = async (ctxt, time: number , destinationChoice: string) =>
   try{
     const user = await User.find({ username: ctxt.chat.username });
     console.log("userdata",user[0])
+
+    
+
   const userName = user[0].username//await User.findOne({ username: ctxt.chat.username });
   const userDestination = user[0].destination//await User.findOne({ destination: destinationChoice });
   const time = user[0].timeslot//await User.findOne({ timeslot: time });
-  if(userDestination === destinationChoice){ console.log(userDestination)}
+  if(userDestination === destinationChoice){ return console.log(userDestination)}
   console.log(`userName${userName} && userDest${userDestination} && time ${time}` )
   if (userName && userDestination){
     await ctxt.reply(`You have already chosen a ${userDestination}, update your choice?`)//, { reply_markup: timeMenu });

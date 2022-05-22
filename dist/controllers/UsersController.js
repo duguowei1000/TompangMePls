@@ -44,7 +44,7 @@ const saveUserChoice = async (ctxt, time, destinationChoice) => {
         const userDestination = user[0].destination; //await User.findOne({ destination: destinationChoice });
         const time = user[0].timeslot; //await User.findOne({ timeslot: time });
         if (userDestination === destinationChoice) {
-            console.log(userDestination);
+            return console.log(userDestination);
         }
         console.log(`userName${userName} && userDest${userDestination} && time ${time}`);
         if (userName && userDestination) {

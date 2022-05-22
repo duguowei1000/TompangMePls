@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const chatSchema = new mongoose.Schema({
+const InviteDBSchema = new mongoose.Schema({
     
     chats: [{
         chatids: [{ type: Number, unique: true }],
@@ -21,7 +21,7 @@ const chatSchema = new mongoose.Schema({
 
 });
 
-const Chat = mongoose.model("chat", chatSchema);
+const InviteDB = mongoose.model("chat", InviteDBSchema);
 
-export default Chat;
+export default InviteDB;
 // module.exports = Chat;

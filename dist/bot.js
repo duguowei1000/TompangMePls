@@ -27,40 +27,30 @@ const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 const grammy_1 = require("grammy");
 const menu_1 = require("@grammyjs/menu");
+const router_1 = require("@grammyjs/router");
 const UsersController_1 = require("./controllers/UsersController");
-//Parameters
-const botToken = String(process.env.BOT_TOKEN);
-const domain = String(process.env.DOMAIN);
-let port = Number(process.env.PORT);
-if (port == null) {
-    port = 3600;
-}
+const dish_1 = require("./dish");
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
 if (process.env.BOT_TOKEN == null)
     throw Error("BOT_TOKEN is missing.");
 const bot = new grammy_1.Bot(`${process.env.BOT_TOKEN}`);
-bot.command("start", (ctx) => ctx.reply("Hello there!"));
-bot.on("message", (ctx) => ctx.reply("Got another message!"));
-const dishDatabase = [
-    { id: "pasta", name: "Pasta" },
-    { id: "pizza", name: "Pizza" },
-    { id: "sushi", name: "Sushi" },
-    { id: "entrct", name: "Entrecôte" },
-];
 bot.use((0, grammy_1.session)({
     initial() {
-        return { favoriteIds: [], username: [] };
+        return {
+            step: "idle",
+            chatid: [],
+            username: "",
+            enterAL: undefined,
+            isDriving: { exist: undefined, spareCapacity: 1 },
+            timeslot: "",
+            locationToMeet: "",
+            favoriteIds: [],
+        };
     },
 }));
-bot.api.declineChatJoinRequest;
-/**
- * All known dishes. Users can rate them to store which ones are their favorite
- * dishes.
- *
- * They can also decide to delete them. If a user decides to delete a dish, it
- * will be gone for everyone.
- */
+// Use router
+const stepRouter = new router_1.Router((ctx) => ctx.session.step);
 const scheduleDatabase = [
     { time: 900, timeDisplay: "900" },
     { time: 930, timeDisplay: "930" },
@@ -71,73 +61,6 @@ const scheduleDatabase = [
     { time: 1300, timeDisplay: "1300" },
     { time: 1330, timeDisplay: "1330" },
 ];
-// Create a dynamic menu that lists all dishes in the dishDatabase,
-// one button each
-const mainText = "Pick a dish to rate it!";
-const mainMenu = new menu_1.Menu("food");
-mainMenu.dynamic(() => {
-    const range = new menu_1.MenuRange();
-    for (const dish of dishDatabase) {
-        range.submenu({ text: dish.name, payload: dish.id }, // label and payload
-        "dish", // navigation target menu
-        (ctx) => ctx.editMessageText(dishText(dish.name), { parse_mode: "HTML" }))
-            .row();
-    }
-    return range;
-});
-// Create the sub-menu that is used for rendering dishes
-const dishText = (dish) => `<b>${dish}</b>\n\nYour rating:`;
-const dishMenu = new menu_1.Menu("dish");
-dishMenu.dynamic((ctx) => {
-    const dish = ctx.match;
-    if (typeof dish !== "string")
-        throw new Error("No dish chosen!");
-    return createDishMenu(dish);
-});
-/** Creates a menu that can render any given dish */
-function createDishMenu(dish) {
-    return new menu_1.MenuRange()
-        .text({
-        text: (ctx) => ctx.session.favoriteIds.includes(dish) ? "Yummy!" : "Meh.",
-        payload: dish,
-    }, (ctx) => {
-        const set = new Set(ctx.session.favoriteIds);
-        if (!set.delete(dish))
-            set.add(dish);
-        ctx.session.favoriteIds = Array.from(set.values());
-        ctx.menu.update();
-    })
-        .row()
-        .back({ text: "X Delete", payload: dish }, async (ctx) => {
-        const index = dishDatabase.findIndex((d) => d.id === dish);
-        console.log(index);
-        dishDatabase.splice(index, 1);
-        await ctx.editMessageText("Pick a dish to rate it!");
-    })
-        .row()
-        .back({ text: "Back", payload: dish });
-}
-mainMenu.register(dishMenu);
-bot.use(mainMenu);
-bot.command("start", (ctx) => ctx.reply(mainText, { reply_markup: mainMenu }));
-bot.command("help", async (ctx) => {
-    const text = "Send /start to see and rate dishes. Send /fav to list your favorites!";
-    await ctx.reply(text);
-});
-bot.command("fav", async (ctx) => {
-    const favs = ctx.session.favoriteIds;
-    if (favs.length === 0) {
-        await ctx.reply("You do not have any favorites yet!");
-        return;
-    }
-    const names = favs
-        .map((id) => dishDatabase.find((dish) => dish.id === id))
-        .filter((dish) => dish !== undefined)
-        .map((dish) => dish.name)
-        .join("\n");
-    await ctx.reply(`Those are your favorite dishes:\n\n${names}`);
-});
-bot.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
 // const outputSuggestedMRT = async (ctxt) => {
 //     await ctxt.reply("please wait while we find a driver..")
@@ -148,7 +71,7 @@ bot.catch(console.error.bind(console));
 //     //   );
 // }
 ////////////////OUTPUT MENU///////////
-////DYNAMIC MENU
+////DYNAMIC MENU\\\\
 const timeMenu = new menu_1.Menu("timeMenu");
 timeMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
@@ -169,36 +92,65 @@ timeMenu
 })
     .back("Go Back");
 // .text("Cancel", (ctx) => ctx.deleteMessage());
-// timeMenu.register(opMRTmenu)    
+const locationText = (enterLodge) => {
+    if (enterLodge) {
+        return `What <b>time</b> do you want to <b>reach Animal Lodge</b> ?`;
+    }
+    else
+        return `What <b>time</b> do you want to <b>leave Animal Lodge</b> ?`;
+};
+const userDriver_menu = new menu_1.Menu("userDriver_menu")
+    // .text("Passenger", (ctx) => ctx.reply("Passenger"))
+    // .text("Driver", (ctx) => ctx.reply("Driver")).row()
+    .submenu("Passenger", "timeMenu", // navigation target menu
+(ctx) => {
+    ctx.session.isDriving = false;
+    ctx.editMessageText(locationText(ctx.session.enterAL), { parse_mode: "HTML" });
+} // handler
+)
+    .submenu("Driver", "timeMenu", // navigation target menu
+(ctx) => {
+    ctx.session.isDriving = true;
+    ctx.editMessageText(locationText(ctx.session.enterAL), { parse_mode: "HTML" });
+} // handler
+).row()
+    .back("Go Back");
+const start_menu = new menu_1.Menu("start-menu")
+    // .text("Going to Animal Lodge", (ctx) => ctx.reply("Going to Animal Lodge", { reply_markup: userDriver_menu }))
+    // .text("Leaving Animal Lodge", (ctx) => ctx.reply("Leaving Animal Lodge", { reply_markup: userDriver_menu })).row()
+    .submenu("Going to Animal Lodge", "userDriver_menu", // navigation target menu
+(ctx) => {
+    ctx.editMessageText(userDriverText(), { parse_mode: "HTML" });
+    ctx.session.enterAL = true;
+} // handler
+).row()
+    .submenu("Leaving Animal Lodge", "userDriver_menu", // navigation target menu
+(ctx) => {
+    ctx.editMessageText(userDriverText(), { parse_mode: "HTML" }); // handler
+    ctx.session.enterAL = false;
+});
+//REGISTER
+// timeMenu.register(opMRTmenu)   
+userDriver_menu.register(timeMenu);
+start_menu.register(userDriver_menu);
+// main.register(settings, "dynamic");// Optionally, set a different parent.
+// settings.register(timeMenu)
+//Bot use
 bot.use(timeMenu);
 bot.command("timemenu", async (ctx) => {
     await ctx.reply(`Please choose the time you want to reach your <b>Location</b>!`, { reply_markup: timeMenu });
 });
-///////////////Submenu <> Going Back////////////////////////////////////////////////
-const root_menu = new menu_1.Menu("root-menu")
-    .text("Passenger", (ctx) => ctx.reply("Passenger"))
-    .text("Driver", (ctx) => ctx.reply("Driver")).row()
-    .submenu("timeSchedule", "timeMenu", // navigation target menu
-(ctx) => ctx.editMessageText("Please choose the time you want to reach your ${Location}!", { parse_mode: "HTML" }));
-const settings = new menu_1.Menu("credits-menu")
-    .text("Show Credits", (ctx) => ctx.reply("Powered by grammY"))
-    .back("Go Back").row();
-bot.use(settings);
-bot.command("settings", async (ctx) => {
-    await ctx.reply("Are you a Driver or Passenger", { reply_markup: settings });
+const userDriverText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
+bot.use(userDriver_menu);
+bot.command("start", async (ctx) => {
+    await ctx.reply(startText(), { reply_markup: start_menu, parse_mode: "HTML" });
 });
-root_menu.register(timeMenu);
-// main.register(settings, "dynamic");// Optionally, set a different parent.
-// settings.register(timeMenu)
-const rootText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
-bot.use(root_menu);
-bot.command("root", async (ctx) => {
-    await ctx.reply(rootText(), { reply_markup: root_menu, parse_mode: "HTML" });
-});
+const startText = () => `Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`;
+bot.use(start_menu);
 ///////////////////////////////////////////////////////////////////////TESTING
-////////////////////////////////////////////////////
-bot.hears("yoyoyo", async (ctx) => {
+bot.command("session", async (ctx) => {
     //await bot.api.sendMessage(427599753, "hihihihihi");
+    console.log("session", ctx.session);
 });
 bot.command("add", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
@@ -206,7 +158,6 @@ bot.command("add", (ctx) => {
     console.log(item);
 });
 bot.command("menu", async (ctx) => {
-    // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const msgtext = ctx.msg.text;
     console.log(msgtext);
 });
@@ -224,18 +175,24 @@ bot.command("adduser", (ctx) => {
 //     username: 'mrdgw',
 //     type: 'private'
 //   }
-bot.command("start", (ctx) => ctx.reply("Hello there!"));
+// const settings = new Menu("credits-menu")
+//     .text("Show Credits", (ctx) => ctx.reply("Powered by grammY",
+//     ))
+//     .back("Go Back").row();
+// bot.use(settings)
+// bot.command("settings", async (ctx) => {
+//     await ctx.reply("Are you a Driver or Passenger", { reply_markup: settings });
+// });
+// bot.command("start", (ctx) => ctx.reply("Hello there!"));
 // bot.command("menu", async (ctx) => {
 //     // Send the menu.
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
-// bot.on("message", (ctx) => ctx.reply("Got another message!"));
-// bot.start(); ###DONT USE THIS IN THE MIDDLE###
-// bot.api.setWebhook(`${domain}/${botToken}`)
-// console.log(`set Webhook at ${domain}/${botToken}`)
+// bot.on("message", (ctx) => ctx.reply("Got another message!"))
 bot.on("message", (ctx) => {
     // Now `str` is of type `string`.
     const str = ctx.session;
     console.log(str);
 });
+bot.use(dish_1.dishes);
 exports.default = bot;

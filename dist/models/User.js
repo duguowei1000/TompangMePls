@@ -7,8 +7,9 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const userSchema = new mongoose_1.default.Schema({
     chatid: { type: Number, unique: true },
     username: { type: String, unique: true, required: true },
+    enterAL: { type: Boolean },
     timeslot: { type: Date },
-    destination: { type: String }
+    locationToMeet: { type: String }
 });
 const User = mongoose_1.default.model("User", userSchema);
 exports.default = User;
