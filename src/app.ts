@@ -330,6 +330,6 @@ app.post(`/${botToken}`, (req, res) => {
 //   })
 
 app.use(`/${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
-// app.listen(port, () => {
-//     console.log(`Example app listening on port ${port}!`)
-// })
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}!`)
+})

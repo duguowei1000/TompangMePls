@@ -275,6 +275,6 @@ app.post(`/${botToken}`, (req, res) => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
 app.use(`/${botToken}`, (0, grammy_1.webhookCallback)(bot_1.default, "express")); //no need "/"//must be at the end
-// app.listen(port, () => {
-//     console.log(`Example app listening on port ${port}!`)
-// })
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}!`);
+});
