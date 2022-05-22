@@ -245,7 +245,7 @@ bot_1.default.on("message", (ctx) => {
     const str = ctx.session;
     console.log(str);
 });
-// bot.start()
+bot_1.default.start();
 ///EXPRESS
 const app = (0, express_1.default)();
 app.use((0, morgan_1.default)("tiny"));

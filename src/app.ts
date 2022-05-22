@@ -292,7 +292,7 @@ bot.on("message", (ctx) => {
     console.log(str)
 });
 
-// bot.start()
+bot.start()
 ///EXPRESS
 const app = express();
 
