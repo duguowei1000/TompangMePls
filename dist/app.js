@@ -266,10 +266,8 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-// bot.api.setWebhook(`${botToken}`).then(() => {
-//     console.log(`webhook is set on: ${botToken}`)
-//   })
 app.use(`/${botToken}`, (0, grammy_1.webhookCallback)(bot_1.default, "express")); //no need "/"//must be at the end
+//remember to set domain config in HEROKU
 app.listen(port, async () => {
     console.log(`Example app listening on port ${port}!`);
     console.log(`set Webhook at ${domain}/${botToken}`);
