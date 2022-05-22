@@ -157,15 +157,15 @@ bot.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
 
 
-const outputSuggestedMRT = async (ctxt) => {
+// const outputSuggestedMRT = async (ctxt) => {
 
-    await ctxt.reply("please wait while we find a driver..")
-    // await ctxt.reply(
-    //     ctxt.id,
-    //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
-    //     // { parse_mode: "MarkdownV2" },
-    //   );
-}
+//     await ctxt.reply("please wait while we find a driver..")
+//     // await ctxt.reply(
+//     //     ctxt.id,
+//     //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
+//     //     // { parse_mode: "MarkdownV2" },
+//     //   );
+// }
 ////////////////OUTPUT MENU///////////
 
 ////DYNAMIC MENU
@@ -292,7 +292,7 @@ bot.on("message", (ctx) => {
     console.log(str)
 });
 
-bot.start()
+// bot.start()
 ///EXPRESS
 const app = express();
 

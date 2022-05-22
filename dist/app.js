@@ -145,14 +145,14 @@ bot_1.default.command("fav", async (ctx) => {
 });
 bot_1.default.catch(console.error.bind(console));
 /////////////FUNCTION for saving username and choice of time///////////
-const outputSuggestedMRT = async (ctxt) => {
-    await ctxt.reply("please wait while we find a driver..");
-    // await ctxt.reply(
-    //     ctxt.id,
-    //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
-    //     // { parse_mode: "MarkdownV2" },
-    //   );
-};
+// const outputSuggestedMRT = async (ctxt) => {
+//     await ctxt.reply("please wait while we find a driver..")
+//     // await ctxt.reply(
+//     //     ctxt.id,
+//     //     "*Hi\\!* _Welcome_ to [grammY](https://grammy.dev)\\.",
+//     //     // { parse_mode: "MarkdownV2" },
+//     //   );
+// }
 ////////////////OUTPUT MENU///////////
 ////DYNAMIC MENU
 const timeMenu = new menu_1.Menu("timeMenu");
@@ -244,7 +244,7 @@ bot_1.default.on("message", (ctx) => {
     const str = ctx.session;
     console.log(str);
 });
-bot_1.default.start();
+// bot.start()
 ///EXPRESS
 const app = (0, express_1.default)();
 app.use((0, morgan_1.default)("tiny"));
