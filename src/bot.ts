@@ -18,6 +18,9 @@ console.log(">>> in bot.ts >>>",process.env.BOT_TOKEN)
 if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
 const bot = new Bot(`${process.env.BOT_TOKEN}`);
 
+bot.command("start", (ctx) => ctx.reply("Hello there!"));
+bot.on("message", (ctx) => ctx.reply("Got another message!"));
+
 //////BOT
 // export const bot = new Bot(`${process.env.BOT_TOKEN}`);
 // const bot = new Bot<MyContext>(`${process.env.BOT_TOKEN}`);
@@ -285,5 +288,5 @@ bot.on("message", (ctx) => {
     console.log(str)
 });
 
-bot.start()
+
 export default bot
