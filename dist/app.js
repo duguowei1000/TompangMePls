@@ -32,6 +32,7 @@ const express_1 = __importDefault(require("express"));
 const method_override_1 = __importDefault(require("method-override"));
 const morgan_1 = __importDefault(require("morgan"));
 const grammy_1 = require("grammy");
+const grammy_2 = require("grammy");
 const menu_1 = require("@grammyjs/menu");
 const mongoose_1 = __importDefault(require("mongoose"));
 const ChatsController_1 = __importDefault(require("./controllers/ChatsController"));
@@ -54,7 +55,7 @@ const dishDatabase = [
     { id: "sushi", name: "Sushi" },
     { id: "entrct", name: "Entrecôte" },
 ];
-bot_1.default.use((0, grammy_1.session)({
+bot_1.default.use((0, grammy_2.session)({
     initial() {
         return { favoriteIds: [], username: [] };
     },
@@ -265,7 +266,6 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//   app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
 // app.listen(Number(process.env.PORT), async () => {
 //   console.log(`Example app listening on port ${port}!`)
 //   console.log(`set Webhook at ${domain}/${botToken}`)
@@ -274,7 +274,7 @@ app.post(`/${botToken}`, (req, res) => {
 // bot.api.setWebhook(`${botToken}`).then(() => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
-// app.use(bot.Api.webhookCallback(`/${botToken}`)) //must be at the end
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}!`);
-});
+app.use(`/${botToken}`, (0, grammy_1.webhookCallback)(bot_1.default, "express")); //no need "/"//must be at the end
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}!`)
+// })

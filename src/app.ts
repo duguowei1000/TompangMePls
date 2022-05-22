@@ -319,7 +319,7 @@ app.post(`/${botToken}`, (req, res) => {
 
 });
 
-//   app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
+
 // app.listen(Number(process.env.PORT), async () => {
 //   console.log(`Example app listening on port ${port}!`)
 //   console.log(`set Webhook at ${domain}/${botToken}`)
@@ -329,7 +329,7 @@ app.post(`/${botToken}`, (req, res) => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
 
-// app.use(bot.Api.webhookCallback(`/${botToken}`)) //must be at the end
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}!`)
-})
+app.use(`/${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}!`)
+// })
