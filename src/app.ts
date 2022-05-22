@@ -325,7 +325,7 @@ app.post(`/${botToken}`, (req, res) => {
 //     console.log(`webhook is set on: ${botToken}`)
 //   })
 
-app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
+app.use(`/${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
 app.listen(port, async () => {
   console.log(`Example app listening on port ${port}!`)
   console.log(`set Webhook at ${domain}/${botToken}`)
