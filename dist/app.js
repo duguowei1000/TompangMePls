@@ -163,10 +163,10 @@ timeMenu
     for (let i = 0; i < scheduleDatabase.length - 1; i++) {
         range
             .text(scheduleDatabase[i].timeDisplay, (ctx) => {
-            ctx.reply(`You chose ${scheduleDatabase[i].timeDisplay}`);
             //  console.log(ctx.chat)
             const time = scheduleDatabase[i].timeDisplay;
-            (0, UsersController_1.saveUserChoice)(ctx, time);
+            const destinationChoice = 'Jurong East';
+            (0, UsersController_1.saveUserChoice)(ctx, time, destinationChoice);
         })
             .row();
     }

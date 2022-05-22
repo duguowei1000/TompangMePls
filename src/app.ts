@@ -50,7 +50,7 @@ const dishDatabase: Dish[] = [
 ];
 
 bot.use(session({
-    initial(): SessionData {
+    initial(){
         return { favoriteIds: [], username: [] };
     },
 }));
@@ -177,11 +177,11 @@ timeMenu
         for (let i = 0; i < scheduleDatabase.length - 1; i++) {
             range
                 .text(scheduleDatabase[i].timeDisplay, (ctx) => {
-                    ctx.reply(
-                        `You chose ${scheduleDatabase[i].timeDisplay}`)
+   
                     //  console.log(ctx.chat)
                     const time = scheduleDatabase[i].timeDisplay
-                    saveUserChoice(ctx, time)
+                    const destinationChoice ='Jurong East'
+                    saveUserChoice(ctx, time, destinationChoice)
 
 
 

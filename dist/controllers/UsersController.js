@@ -7,7 +7,6 @@ exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
 const User_1 = __importDefault(require("../models/User"));
 const router = express_1.default.Router();
-// const bcrypt = require("bcrypt");
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
     try {
@@ -34,14 +33,27 @@ router.get("/seed", async (req, res) => {
         console.log(error);
     }
 });
-const saveUserChoice = async (ctxt, time) => {
+const saveUserChoice = async (ctxt, time, destinationChoice) => {
+    // console.log('chatusername',ctxt.chat.username)
+    // console.log('destChoice',destinationChoice)
+    console.log('timeChoice', time);
     try {
-        const userDestination = await User_1.default.findOne({ destination: ctxt.chat.destination });
-        if (userDestination) {
-            console.log(`You have already chosen a ${ctxt.chat.destination}, update your choice?`);
+        const user = await User_1.default.find({ username: ctxt.chat.username });
+        console.log("userdata", user[0]);
+        const userName = user[0].username; //await User.findOne({ username: ctxt.chat.username });
+        const userDestination = user[0].destination; //await User.findOne({ destination: destinationChoice });
+        const time = user[0].timeslot; //await User.findOne({ timeslot: time });
+        if (userDestination === destinationChoice) {
+            console.log(userDestination);
+        }
+        console.log(`userName${userName} && userDest${userDestination} && time ${time}`);
+        if (userName && userDestination) {
+            await ctxt.reply(`You have already chosen a ${userDestination}, update your choice?`); //, { reply_markup: timeMenu });
+            console.log(`You have already chosen a ${userDestination}, update your choice?`);
         }
         else {
-            console.log(ctxt.chat);
+            // console.log(ctxt.chat)
+            ctxt.reply(`You chose ${time}`);
             console.log(`${ctxt.chat.username} chose Time >>> ${time}`); //scheduleDatabase[i].timeDisplay)
             const createdListing = await User_1.default.create({
                 chatid: `${ctxt.chat.id}`,
