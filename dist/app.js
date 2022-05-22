@@ -59,6 +59,7 @@ bot_1.default.use((0, grammy_1.session)({
         return { favoriteIds: [], username: [] };
     },
 }));
+bot_1.default.api.declineChatJoinRequest;
 /**
  * All known dishes. Users can rate them to store which ones are their favorite
  * dishes.
@@ -218,7 +219,9 @@ bot_1.default.command("menu", async (ctx) => {
 bot_1.default.command("adduser", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const username = ctx.chat;
-    console.log(username);
+    const chat = ctx;
+    console.log("chat ", username);
+    console.log("chatdetails", chat);
 });
 //OUTPUTS
 // {
@@ -262,13 +265,16 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//  app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
-// app.listen(Number(process.env.PORT), async () => {
-//   console.log(`Example app listening on port ${port}!`)
-//   console.log(`set Webhook at ${domain}/${botToken}`)
-//   await bot.api.setWebhook(`${domain}/${botToken}`);
-// });
-// app.use(bot.api.webhookCallback(`/${botToken}`)) //must be at the end
-app.listen(port, () => {
+//   app.use(`${botToken}`, webhookCallback(bot, "express")); //no need "/"
+app.listen(Number(process.env.PORT), async () => {
     console.log(`Example app listening on port ${port}!`);
+    console.log(`set Webhook at ${domain}/${botToken}`);
+    await bot_1.default.api.setWebhook(`${domain}/${botToken}`);
 });
+// bot.api.setWebhook(`${botToken}`).then(() => {
+//     console.log(`webhook is set on: ${botToken}`)
+//   })
+// app.use(bot.Api.webhookCallback(`/${botToken}`)) //must be at the end
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}!`)
+// })

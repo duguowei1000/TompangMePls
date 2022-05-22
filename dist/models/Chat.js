@@ -17,7 +17,8 @@ const chatSchema = new mongoose_1.default.Schema({
                     isDriving: { exist: { type: Boolean }, spareCapacity: { type: Number } },
                     //Derived time to delete member invite if no news after 3mins
                 }
-            ], // If pax left, to update inviteLinkDB immediately
+            ],
+            // If pax left, to update inviteLinkDB.chats.capacity immediately
         }]
 });
 const Chat = mongoose_1.default.model("chat", chatSchema);
