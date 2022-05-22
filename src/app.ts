@@ -328,7 +328,7 @@ app.post(`/${botToken}`, (req, res) => {
 });
 
 
-if (!production){
+if (production){
 app.use(`/${botToken}`, webhookCallback(bot, "express")); //no need "/"//must be at the end
 }
 //remember to set domain config in HEROKU
@@ -336,7 +336,7 @@ app.listen(port, async () => {
   console.log(`Example app listening on port ${port}!`)
 
 
-  if (!production){
+  if (production){
     console.log(`set Webhook at ${domain}/${botToken}`)
   await bot.api.setWebhook(`${domain}/${botToken}`);
   }

@@ -297,13 +297,13 @@ app.post(`/${botToken}`, (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-if (!production) {
+if (production) {
     app.use(`/${botToken}`, (0, grammy_1.webhookCallback)(bot_1.default, "express")); //no need "/"//must be at the end
 }
 //remember to set domain config in HEROKU
 app.listen(port, async () => {
     console.log(`Example app listening on port ${port}!`);
-    if (!production) {
+    if (production) {
         console.log(`set Webhook at ${domain}/${botToken}`);
         await bot_1.default.api.setWebhook(`${domain}/${botToken}`);
     }
