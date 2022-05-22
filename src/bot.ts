@@ -285,5 +285,5 @@ bot.on("message", (ctx) => {
     console.log(str)
 });
 
-
+bot.start()
 export default bot

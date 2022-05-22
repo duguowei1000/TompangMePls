@@ -236,4 +236,5 @@ bot.on("message", (ctx) => {
     const str = ctx.session;
     console.log(str);
 });
+bot.start();
 exports.default = bot;
