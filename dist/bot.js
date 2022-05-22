@@ -39,10 +39,10 @@ bot.use((0, grammy_1.session)({
     initial() {
         return {
             step: "idle",
-            chatid: [],
+            chatid: null,
             username: "",
             enterAL: undefined,
-            isDriving: { exist: undefined, spareCapacity: 1 },
+            isDriving: { exist: undefined, spareCapacity: null },
             timeslot: "",
             locationToMeet: "",
             favoriteIds: [],
@@ -92,6 +92,24 @@ timeMenu
 })
     .back("Go Back");
 // .text("Cancel", (ctx) => ctx.deleteMessage());
+const driver_menu = new menu_1.Menu("driver_menu")
+    .dynamic(() => {
+    // Generate a part of the menu dynamically!
+    const range = new menu_1.MenuRange();
+    for (let i = 1; i < 5; i++) {
+        range
+            .text(`${i}`, (ctx) => {
+            ctx.session.isDriving.spareCapacity = i;
+            ctx.editMessageText(locationText(ctx.session.enterAL), { reply_markup: timeMenu, parse_mode: "HTML" });
+        })
+            .row();
+    }
+    return range;
+})
+    .text("Go Back", (ctx) => {
+    ctx.session.isDriving.exist = null;
+    ctx.menu.nav("userDriver_menu");
+});
 const locationText = (enterLodge) => {
     if (enterLodge) {
         return `What <b>time</b> do you want to <b>reach Animal Lodge</b> ?`;
@@ -104,17 +122,19 @@ const userDriver_menu = new menu_1.Menu("userDriver_menu")
     // .text("Driver", (ctx) => ctx.reply("Driver")).row()
     .submenu("Passenger", "timeMenu", // navigation target menu
 (ctx) => {
-    ctx.session.isDriving = false;
+    ctx.session.isDriving.exist = false;
+    ctx.session.isDriving.spareCapacity = null;
     ctx.editMessageText(locationText(ctx.session.enterAL), { parse_mode: "HTML" });
 } // handler
 )
-    .submenu("Driver", "timeMenu", // navigation target menu
+    .submenu("Driver", "driver_menu", // navigation target menu
 (ctx) => {
-    ctx.session.isDriving = true;
-    ctx.editMessageText(locationText(ctx.session.enterAL), { parse_mode: "HTML" });
+    ctx.session.isDriving.exist = true;
+    ctx.editMessageText(`How many passengers can you take?`, { parse_mode: "HTML" });
 } // handler
 ).row()
     .back("Go Back");
+const userDriverText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
 const start_menu = new menu_1.Menu("start-menu")
     // .text("Going to Animal Lodge", (ctx) => ctx.reply("Going to Animal Lodge", { reply_markup: userDriver_menu }))
     // .text("Leaving Animal Lodge", (ctx) => ctx.reply("Leaving Animal Lodge", { reply_markup: userDriver_menu })).row()
@@ -130,23 +150,21 @@ const start_menu = new menu_1.Menu("start-menu")
     ctx.session.enterAL = false;
 });
 //REGISTER
-// timeMenu.register(opMRTmenu)   
+// timeMenu.register(opMRTmenu)  
+userDriver_menu.register(driver_menu);
 userDriver_menu.register(timeMenu);
 start_menu.register(userDriver_menu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
 // settings.register(timeMenu)
 //Bot use
 bot.use(timeMenu);
-bot.command("timemenu", async (ctx) => {
-    await ctx.reply(`Please choose the time you want to reach your <b>Location</b>!`, { reply_markup: timeMenu });
-});
-const userDriverText = () => `Are you a <b>Driver</b> or <b>Passenger</b>`;
+bot.use(driver_menu);
 bot.use(userDriver_menu);
+bot.use(start_menu);
 bot.command("start", async (ctx) => {
     await ctx.reply(startText(), { reply_markup: start_menu, parse_mode: "HTML" });
 });
 const startText = () => `Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`;
-bot.use(start_menu);
 ///////////////////////////////////////////////////////////////////////TESTING
 bot.command("session", async (ctx) => {
     //await bot.api.sendMessage(427599753, "hihihihihi");
