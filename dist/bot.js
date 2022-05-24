@@ -54,8 +54,16 @@ bot.use((0, grammy_1.session)({
         };
     },
 }));
-// Use router
-const stepRouter = new router_1.Router((ctx) => ctx.session.step);
+const initiallise = {
+    step: "idle",
+    chatid: null,
+    username: "",
+    enterAL: undefined,
+    isDriving: { exist: undefined, spareCapacity: null },
+    timeslot: { day: null, timing: null },
+    locationToMeet: "",
+    favoriteIds: [],
+};
 /////////////FUNCTION for saving username and choice of time///////////
 // const outputSuggestedMRT = async (ctxt) => {
 //     await ctxt.reply("please wait while we find a driver..")
@@ -71,7 +79,6 @@ const timeMenu = new menu_1.Menu("timeMenu");
 timeMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
-    // Generate a part of the menu dynamically!
     const range = new menu_1.MenuRange();
     for (let i = 0; i < time_1.default.length - 1; i++) {
         range.text(time_1.default[i].timeDisplay, (ctx) => {
@@ -85,32 +92,30 @@ timeMenu
     return range;
 })
     .text("Go Back", (ctx) => {
-    ctx.session.isDriving = { exist: undefined, spareCapacity: null };
     ctx.session.timeslot = { day: null, timing: null };
-    ctx.menu.nav("userDriver_menu");
-    ctx.editMessageText(userDriverText(), { parse_mode: "HTML" });
+    ctx.session.step = "day";
+    ctx.menu.nav("days_menu");
+    ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" });
 });
 // .text("Cancel", (ctx) => ctx.deleteMessage());
+// Use router
+const stepRouter = new router_1.Router((ctx) => ctx.session.step);
 // Define step that handles the time.
 stepRouter.route("time", async (ctx) => {
-    const day = parseInt(ctx.msg?.text ?? "", 10);
-    if (isNaN(day) || day < 1 || 31 < day) {
+    const timeWrote = parseInt(ctx.msg?.text ?? "", 10);
+    console.log(timeWrote);
+    if (isNaN(timeWrote)) {
         await ctx.reply("That is not a valid day, try again!");
         return;
     }
-    ctx.session.timeslot.timing = day;
-    // Advance form to step for month
-    // ctx.session.step = "month";
-    // await ctx.reply("Got it! Now, send me the month!", {
-    //   reply_markup: {
-    //     one_time_keyboard: true,
-    //     keyboard: new Keyboard()
-    //       .text("Jan").text("Feb").text("Mar").row()
-    //       .text("Apr").text("May").text("Jun").row()
-    //       .text("Jul").text("Aug").text("Sep").row()
-    //       .text("Oct").text("Nov").text("Dec").build(),
-    //   },
-    // });
+    else if (timeWrote < 600 || 2200 < timeWrote) {
+        await ctx.reply(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" });
+        return;
+    }
+    ctx.session.timeslot.timing = timeWrote;
+    // Advance form to step for Calculate Output
+    ctx.session.step = "calculate";
+    await ctx.reply("Got it! we are searching for suitable timeslots!", { reply_markup: timeMenu });
 });
 const days_menu = new menu_1.Menu("days_menu");
 days_menu
@@ -128,10 +133,10 @@ days_menu
                 return day_1.default[thisDay];
         };
         range.text(outText(i), (ctx) => {
+            ctx.session.step = "time";
             ctx.session.timeslot.day = day_1.default[thisDay];
-            ctx.editMessageText(locationText(ctx.session.enterAL));
             ctx.menu.close();
-            ctx.session.step = "time"; //, {reply_markup: timeMenu, parse_mode: "HTML" })
+            ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm)`, { parse_mode: "HTML" });
         })
             .row();
     }
@@ -197,7 +202,16 @@ const start_menu = new menu_1.Menu("start-menu")
     .submenu("Going to Animal Lodge", "userDriver_menu", // navigation target menu
 (ctx) => {
     ctx.editMessageText(userDriverText(), { parse_mode: "HTML" });
-    ctx.session.enterAL = true;
+    ctx.session = {
+        step: "idle",
+        chatid: null,
+        username: "",
+        enterAL: true,
+        isDriving: { exist: undefined, spareCapacity: null },
+        timeslot: { day: null, timing: null },
+        locationToMeet: "",
+        favoriteIds: [],
+    };
 } // handler
 ).row()
     .submenu("Leaving Animal Lodge", "userDriver_menu", // navigation target menu
@@ -214,9 +228,10 @@ start_menu.register(userDriver_menu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
 // settings.register(timeMenu)
 //Bot use
-// bot.use(timeMenu);
+bot.use(timeMenu);
 // bot.use(driver_menu);
 // bot.use(userDriver_menu);
+bot.use(stepRouter);
 bot.use(start_menu);
 bot.command("start", async (ctx) => {
     ctx.session.chatid = ctx.chat.id;

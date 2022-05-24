@@ -18,3 +18,41 @@
 
 // console.log( square(2), divide(2) ); // 4, 1
 // When the {} syntax is used to import a function (or variable) it means that whatever is imported was already named when exported, so one must import it by the exact same name, or else the import wouldn't work.
+
+
+/////////////////////toggle menu
+// // Set of user identifiers that have notifications enabled.
+// const notifications = new Set<number>();
+
+// function toggleNotifications(id: number) {
+//   if (!notifications.delete(id)) notifications.add(id);
+// }
+
+// const toggle = new Menu("toggle")
+//   .text(
+//     (ctx) => ctx.from && notifications.has(ctx.from.id) ? "🔔" : "🔕",
+//     (ctx) => {
+//         console.log("ctxfrom",ctx.from)
+//         console.log("ctxfromid",ctx.from.id)
+//       toggleNotifications(ctx.from.id);
+//       ctx.menu.update(); // update the menu!
+//     },
+//   );
+
+// bot.use(toggle)
+// bot.command("toggle", async (ctx) => {
+//     await ctx.reply(startText(), { reply_markup: toggle, parse_mode: "HTML" });
+// });
+
+
+///Keyboard
+    //   reply_markup: {
+    //     one_time_keyboard: true,
+    //     keyboard: new Keyboard()
+    //       .text("Jan").text("Feb").text("Mar").row()
+    //       .text("Apr").text("May").text("Jun").row()
+    //       .text("Jul").text("Aug").text("Sep").row()
+    //       .text("Oct").text("Nov").text("Dec").build(),
+    //   },
+    // });
+  //});

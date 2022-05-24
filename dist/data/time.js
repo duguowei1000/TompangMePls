@@ -22,4 +22,25 @@ const scheduleDatabase = [
     { time: 1700, timeDisplay: "1700" },
     { time: 1730, timeDisplay: "1730" },
 ];
+const firstTiming = "6am";
+const lastTiming = "10pm";
+const timeStr = '05:00 PM';
+const secondTimeStr = '1142 Pm';
+const thirdTimeStr = '03:00 aM';
+const fourthTimeStr = '1342 am';
+const convertTime = timeStr => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') {
+        hours = '00';
+    }
+    if (modifier === 'PM') {
+        hours = parseInt(hours, 10) + 12;
+    }
+    return `${hours}:${minutes}`;
+};
+console.log(convertTime(timeStr));
+console.log(convertTime(secondTimeStr));
+console.log(convertTime(thirdTimeStr));
+console.log(convertTime(fourthTimeStr));
 exports.default = scheduleDatabase;
