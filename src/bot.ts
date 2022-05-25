@@ -32,7 +32,7 @@ bot.use(session({
             username: "",
             enterAL: undefined,
             isDriving:{ exist: undefined , spareCapacity: null },
-            timeslot: { day: null, timing: null },
+            timeslot: { date: null,  day: null, timing: null },
             locationToMeet: "",
             favoriteIds: [],  
               
@@ -69,18 +69,17 @@ const initiallise = {
 
 
 
-const timeMenu = new Menu("timeMenu");
-timeMenu
+const calculateMenu = new Menu("calculateMenu");
+calculateMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
         const range = new MenuRange();
-        for (let i = 0; i < scheduleDatabase.length - 1; i++) {
-            range.text(scheduleDatabase[i].timeDisplay, (ctx) => {
+        for (let i = 0; i < suggestions.length - 1; i++) {
+            range.text(suggestions[i].timeslot, (ctx) => {
    
                     //  console.log(ctx.chat)
-                    const time = scheduleDatabase[i].timeDisplay
-                    const destinationChoice ='Jurong East'
-                    saveUserChoice(ctx, time, destinationChoice)
+                    const time = suggestions[i].timeDisplay
+                    saveUserChoice(ctx, suggestions, destinationChoice)
                 })
                 .row();
         }
@@ -88,10 +87,10 @@ timeMenu
     }
     )
     .text("Go Back", (ctx)=>{
-        ctx.session.timeslot= { day: null, timing: null  }
+        ctx.session.timeslot= { date: null, day: null, timing: null }
         ctx.session.step = "day";
         ctx.menu.nav("days_menu")
-        ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" })
+        ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" })
     })
 // .text("Cancel", (ctx) => ctx.deleteMessage());
 
@@ -114,7 +113,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    await ctx.reply("Got it! we are searching for suitable timeslots!", {reply_markup: timeMenu});
+    await ctx.reply("Got it! we are searching for suitable timeslots!", {reply_markup: calculateMenu});
     })
 
 const days_menu = new Menu("days_menu");
@@ -123,17 +122,24 @@ days_menu
         const range = new MenuRange();
         for (let i = 0; i < 3; i++) {
             const d = new Date() 
-            const thisDay = d.getDay() +i //day in integer
+            const dateSpecified = new Date() 
+            const thisDay = ()=>{
+                if((d.getDay() + i)>6){
+                    return (d.getDay() + i - 6)
+                }else return (d.getDay() + i) //day in integer
+            } 
+            dateSpecified.setDate(dateSpecified.getDate() + i) //date in GMT+8
+            console.log("date"+dateSpecified+"day"+thisDay() )
             const outText =(i)=>{
                 if(i===0) return `Today`
-                else if(i===1) return`${integerToDay[thisDay]} (Tomorrow)`
-                else return integerToDay[thisDay]
+                else if(i===1) return`${integerToDay[thisDay()]} (Tomorrow)`
+                else return integerToDay[thisDay()]
             }
             range.text( outText(i), (ctx) => {
                     ctx.session.step = "time"
-                    ctx.session.timeslot.day = integerToDay[thisDay]
+                    ctx.session.timeslot = {date: thisDate , day: integerToDay[thisDay()]}
                     ctx.menu.close()
-                    ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm)`, { parse_mode: "HTML" })
+                    ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" })
                 })
                 .row();
         }
@@ -230,7 +236,7 @@ const start_menu = new Menu("start-menu")
 
 //REGISTER
 // timeMenu.register(opMRTmenu)
-days_menu.register(timeMenu);  
+// days_menu.register(timeMenu);  
 userDriver_menu.register(driver_menu)
 userDriver_menu.register(days_menu);
 start_menu.register(userDriver_menu);
@@ -238,7 +244,7 @@ start_menu.register(userDriver_menu);
 // settings.register(timeMenu)
 
 //Bot use
-bot.use(timeMenu);
+bot.use(calculateMenu);
 // bot.use(driver_menu);
 // bot.use(userDriver_menu);
 bot.use(stepRouter)

@@ -5,7 +5,7 @@ const chats: [{
     enterAL: false,//{type: Boolean},
     locationToMeet: "Jurong East",//{type: String},
     //username: { type: String, unique: true, required: true },
-    timeslot: { day: "Thurs", timing: "330pm" },//{ type: Date }, //, default: Date.now 
+    timeslot: { date:  ,day:"Thurs" timing: "1530" },//{ type: Date }, //, default: Date.now 
     invitedMembers: [
         { 
         username: "tuxedo",//{ type: String },
@@ -28,7 +28,7 @@ const chats: [{
     //username: { type: String, unique: true, required: true },
     timeslot: { day: "Tues", timing: "1230pm" },//{ type: Date }, //, default: Date.now 
     invitedMembers: [
-        { 
+        {  
         username: "sprite",//{ type: String },
         isDriving: true,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
         timeInvited: ""//{ type: Date },

@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const InviteDBSchema = new mongoose_1.default.Schema({
     chats: [{
-            chatids: [{ type: Number, unique: true }],
+            chatid: [{ type: Number, unique: true }],
             enterAL: { type: Boolean },
             locationToMeet: { type: String },
             //username: { type: String, unique: true, required: true },
-            timeslot: { type: Date },
+            timeslot: { date: { type: Date }, day: { type: String }, timing: { type: Number } },
             invitedMembers: [
                 {
                     username: { type: String },

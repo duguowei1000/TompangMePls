@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const InviteDBSchema = new mongoose.Schema({
     
     chats: [{
-        chatids: [{ type: Number, unique: true }],
+        chatid: [{ type: Number, unique: true }],
         enterAL: {type: Boolean},
         locationToMeet: {type: String},
         //username: { type: String, unique: true, required: true },
-        timeslot: { type: Date }, //, default: Date.now 
+        timeslot:{date: { type: Date} ,day: { type: String }, timing: {type: Number} } , //, default: Date.now { date: null,  day: null, timing: null },
         invitedMembers: [
             { 
             username: { type: String },

@@ -33,7 +33,6 @@ const menu_1 = require("@grammyjs/menu");
 const router_1 = require("@grammyjs/router");
 const UsersController_1 = require("./controllers/UsersController");
 const dish_1 = require("./dish");
-const time_1 = __importDefault(require("./data/time"));
 const day_1 = __importDefault(require("./data/day"));
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
@@ -48,7 +47,7 @@ bot.use((0, grammy_1.session)({
             username: "",
             enterAL: undefined,
             isDriving: { exist: undefined, spareCapacity: null },
-            timeslot: { day: null, timing: null },
+            timeslot: { date: null, day: null, timing: null },
             locationToMeet: "",
             favoriteIds: [],
         };
@@ -75,27 +74,26 @@ const initiallise = {
 // }
 ////////////////OUTPUT MENU///////////
 ////DYNAMIC MENU\\\\
-const timeMenu = new menu_1.Menu("timeMenu");
-timeMenu
+const calculateMenu = new menu_1.Menu("calculateMenu");
+calculateMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
     const range = new menu_1.MenuRange();
-    for (let i = 0; i < time_1.default.length - 1; i++) {
-        range.text(time_1.default[i].timeDisplay, (ctx) => {
+    for (let i = 0; i < suggestions.length - 1; i++) {
+        range.text(suggestions[i].timeslot, (ctx) => {
             //  console.log(ctx.chat)
-            const time = time_1.default[i].timeDisplay;
-            const destinationChoice = 'Jurong East';
-            (0, UsersController_1.saveUserChoice)(ctx, time, destinationChoice);
+            const time = suggestions[i].timeDisplay;
+            (0, UsersController_1.saveUserChoice)(ctx, suggestions, destinationChoice);
         })
             .row();
     }
     return range;
 })
     .text("Go Back", (ctx) => {
-    ctx.session.timeslot = { day: null, timing: null };
+    ctx.session.timeslot = { date: null, day: null, timing: null };
     ctx.session.step = "day";
     ctx.menu.nav("days_menu");
-    ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" });
+    ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" });
 });
 // .text("Cancel", (ctx) => ctx.deleteMessage());
 // Use router
@@ -115,7 +113,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    await ctx.reply("Got it! we are searching for suitable timeslots!", { reply_markup: timeMenu });
+    await ctx.reply("Got it! we are searching for suitable timeslots!", { reply_markup: calculateMenu });
 });
 const days_menu = new menu_1.Menu("days_menu");
 days_menu
@@ -123,20 +121,29 @@ days_menu
     const range = new menu_1.MenuRange();
     for (let i = 0; i < 3; i++) {
         const d = new Date();
-        const thisDay = d.getDay() + i; //day in integer
+        const dateSpecified = new Date();
+        const thisDay = () => {
+            if ((d.getDay() + i) > 6) {
+                return (d.getDay() + i - 6);
+            }
+            else
+                return (d.getDay() + i); //day in integer
+        };
+        dateSpecified.setDate(dateSpecified.getDate() + i); //date in GMT+8
+        console.log("date" + dateSpecified + "day" + thisDay());
         const outText = (i) => {
             if (i === 0)
                 return `Today`;
             else if (i === 1)
-                return `${day_1.default[thisDay]} (Tomorrow)`;
+                return `${day_1.default[thisDay()]} (Tomorrow)`;
             else
-                return day_1.default[thisDay];
+                return day_1.default[thisDay()];
         };
         range.text(outText(i), (ctx) => {
             ctx.session.step = "time";
-            ctx.session.timeslot.day = day_1.default[thisDay];
+            ctx.session.timeslot = { date: thisDate, day: day_1.default[thisDay()] };
             ctx.menu.close();
-            ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm)`, { parse_mode: "HTML" });
+            ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" });
         })
             .row();
     }
@@ -221,14 +228,14 @@ const start_menu = new menu_1.Menu("start-menu")
 });
 //REGISTER
 // timeMenu.register(opMRTmenu)
-days_menu.register(timeMenu);
+// days_menu.register(timeMenu);  
 userDriver_menu.register(driver_menu);
 userDriver_menu.register(days_menu);
 start_menu.register(userDriver_menu);
 // main.register(settings, "dynamic");// Optionally, set a different parent.
 // settings.register(timeMenu)
 //Bot use
-bot.use(timeMenu);
+bot.use(calculateMenu);
 // bot.use(driver_menu);
 // bot.use(userDriver_menu);
 bot.use(stepRouter);
