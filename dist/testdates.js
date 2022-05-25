@@ -16,3 +16,11 @@ console.log("thisdate", date.getDate());
 date.setDate(date.getDate() + 8); //date in integer
 console.log("thisdate", date.getDate());
 // Note that the JavaScript's Date object tracks time in UTC internally, but most of its methods (except the ones with UTC in their name) return output in the local time of the visitor (the time zone the visitor's computer is in).
+const trialDate = new Date;
+trialDate.getDate();
+console.log(trialDate);
+const mili = new Date(trialDate); //new Date("Thu May 26 2022 23:35:39")
+// milliseconds since Jan 1, 1970, 00:00:00.000 GMT
+console.log("moonlanding", mili.getTime());
+mili.getDay();
+console.log('date', mili.getDay());

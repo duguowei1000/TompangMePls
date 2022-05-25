@@ -7,8 +7,8 @@ import { saveUserChoice} from "./controllers/UsersController";
 import { dishes } from "./dish";
 import scheduleDatabase from "./data/time";
 import integerToDay from "./data/day";
-import invitedata from "./data/invitedata"
-import { AnyArray } from "mongoose";
+import { suggestions } from "./data/invitedata";
+
 
 //////BOT
 console.log(">>> in bot.ts >>>",process.env.BOT_TOKEN)
@@ -68,18 +68,23 @@ const initiallise = {
 ////DYNAMIC MENU\\\\
 
 
-
 const calculateMenu = new Menu("calculateMenu");
 calculateMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
         const range = new MenuRange();
-        for (let i = 0; i < suggestions.length - 1; i++) {
-            range.text(suggestions[i].timeslot, (ctx) => {
-   
+        for (let i = 0; i < suggestions.length; i++) {
+
+            const gotDriver = (i:number) => {if(suggestions[i].enterAL){return "Incl. Driver"}else return "No Driver"}
+            range.text(
+                `${suggestions[i].timeslot.day} ${suggestions[i].timeslot.timing}@${suggestions[i].locationToMeet} (${suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, 
+                
+                (ctx) => {
                     //  console.log(ctx.chat)
-                    const time = suggestions[i].timeDisplay
-                    saveUserChoice(ctx, suggestions, destinationChoice)
+                    const date = suggestions[i].timeslot.date
+                    const locationToMeet = suggestions[i].locationToMeet
+                    
+                    saveUserChoice(ctx, date, locationToMeet)
                 })
                 .row();
         }
@@ -113,7 +118,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    await ctx.reply("Got it! we are searching for suitable timeslots!", {reply_markup: calculateMenu});
+    await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", {reply_markup: calculateMenu});
     })
 
 const days_menu = new Menu("days_menu");
@@ -137,7 +142,7 @@ days_menu
             }
             range.text( outText(i), (ctx) => {
                     ctx.session.step = "time"
-                    ctx.session.timeslot = {date: thisDate , day: integerToDay[thisDay()]}
+                    ctx.session.timeslot = {date: dateSpecified , day: integerToDay[thisDay()]}
                     ctx.menu.close()
                     ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" })
                 })

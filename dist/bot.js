@@ -34,6 +34,7 @@ const router_1 = require("@grammyjs/router");
 const UsersController_1 = require("./controllers/UsersController");
 const dish_1 = require("./dish");
 const day_1 = __importDefault(require("./data/day"));
+const invitedata_1 = require("./data/invitedata");
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
 if (process.env.BOT_TOKEN == null)
@@ -79,11 +80,17 @@ calculateMenu
     .url("About", "https://grammy.dev/plugins/menu").row()
     .dynamic(() => {
     const range = new menu_1.MenuRange();
-    for (let i = 0; i < suggestions.length - 1; i++) {
-        range.text(suggestions[i].timeslot, (ctx) => {
+    for (let i = 0; i < invitedata_1.suggestions.length; i++) {
+        const gotDriver = (i) => { if (invitedata_1.suggestions[i].enterAL) {
+            return "Incl. Driver";
+        }
+        else
+            return "No Driver"; };
+        range.text(`${invitedata_1.suggestions[i].timeslot.day} ${invitedata_1.suggestions[i].timeslot.timing}@${invitedata_1.suggestions[i].locationToMeet} (${invitedata_1.suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, (ctx) => {
             //  console.log(ctx.chat)
-            const time = suggestions[i].timeDisplay;
-            (0, UsersController_1.saveUserChoice)(ctx, suggestions, destinationChoice);
+            const date = invitedata_1.suggestions[i].timeslot.date;
+            const locationToMeet = invitedata_1.suggestions[i].locationToMeet;
+            (0, UsersController_1.saveUserChoice)(ctx, date, locationToMeet);
         })
             .row();
     }
@@ -113,7 +120,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    await ctx.reply("Got it! we are searching for suitable timeslots!", { reply_markup: calculateMenu });
+    await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", { reply_markup: calculateMenu });
 });
 const days_menu = new menu_1.Menu("days_menu");
 days_menu
@@ -141,7 +148,7 @@ days_menu
         };
         range.text(outText(i), (ctx) => {
             ctx.session.step = "time";
-            ctx.session.timeslot = { date: thisDate, day: day_1.default[thisDay()] };
+            ctx.session.timeslot = { date: dateSpecified, day: day_1.default[thisDay()] };
             ctx.menu.close();
             ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" });
         })
