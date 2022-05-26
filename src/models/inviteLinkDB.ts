@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const InviteDBSchema = new mongoose.Schema({
     
     chats: [{
-        chatid: [{ type: Number, unique: true }],
+        grpchatid: [{ type: Number, unique: true }],
         enterAL: {type: Boolean},
         locationToMeet: {type: String},
         //username: { type: String, unique: true, required: true },
@@ -21,7 +21,7 @@ const InviteDBSchema = new mongoose.Schema({
 
 });
 
-const InviteDB = mongoose.model("chat", InviteDBSchema);
+const InviteDB = mongoose.model("InviteDB", InviteDBSchema);
 
 export default InviteDB;
 // module.exports = Chat;

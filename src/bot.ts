@@ -3,7 +3,7 @@ dotenv.config();
 import { Bot, Context, session, SessionFlavor, Composer, InlineKeyboard, Keyboard } from "grammy";
 import { Menu, MenuRange, } from "@grammyjs/menu";
 import { Router } from "@grammyjs/router";
-import { saveUserChoice} from "./controllers/UsersController";
+import { saveUserChoice, findUserChoice} from "./controllers/UsersController";
 import { dishes } from "./dish";
 import scheduleDatabase from "./data/time";
 import integerToDay from "./data/day";
@@ -34,7 +34,7 @@ bot.use(session({
             isDriving:{ exist: undefined , spareCapacity: null },
             timeslot: { date: null,  day: null, timing: null },
             locationToMeet: "",
-            favoriteIds: [],  
+            suggestionTimeslots: [],  
               
         };
     },
@@ -48,7 +48,7 @@ const initiallise = {
     isDriving:{ exist: undefined , spareCapacity: null },
     timeslot: { day: null, timing: null },
     locationToMeet: "",
-    favoriteIds: [],  
+    suggestionTimeslots: [],  
 }
 
 /////////////FUNCTION for saving username and choice of time///////////
@@ -75,16 +75,20 @@ calculateMenu
         const range = new MenuRange();
         for (let i = 0; i < suggestions.length; i++) {
 
-            const gotDriver = (i:number) => {if(suggestions[i].enterAL){return "Incl. Driver"}else return "No Driver"}
+
+            const gotDriver = (i:number) => {
+                const x= suggestions[i].invitedMembers
+                for (const element of x) {
+                    if(element.isDriving.exist)
+                    {return "Incl. Driver"}else return "No Driver"}
+                }
+
             range.text(
-                `${suggestions[i].timeslot.day} ${suggestions[i].timeslot.timing}@${suggestions[i].locationToMeet} (${suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, 
+                `${suggestions[i].timeslot.day} ${suggestions[i].timeslot.timing} @ ${suggestions[i].locationToMeet} (${suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, 
                 
                 (ctx) => {
-                    //  console.log(ctx.chat)
-                    const date = suggestions[i].timeslot.date
-                    const locationToMeet = suggestions[i].locationToMeet
                     
-                    saveUserChoice(ctx, date, locationToMeet)
+                    saveUserChoice(ctx, suggestions[i]) //output invitelink
                 })
                 .row();
         }
@@ -118,6 +122,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
+    ctx.session.suggestionTimeslots = findUserChoice(ctx.session)   //find if it is amongst existing DB, else to add to suggestions
     await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", {reply_markup: calculateMenu});
     })
 

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const InviteDBSchema = new mongoose_1.default.Schema({
     chats: [{
-            chatid: [{ type: Number, unique: true }],
+            grpchatid: [{ type: Number, unique: true }],
             enterAL: { type: Boolean },
             locationToMeet: { type: String },
             //username: { type: String, unique: true, required: true },
@@ -23,6 +23,6 @@ const InviteDBSchema = new mongoose_1.default.Schema({
         }
     ]
 });
-const InviteDB = mongoose_1.default.model("chat", InviteDBSchema);
+const InviteDB = mongoose_1.default.model("InviteDB", InviteDBSchema);
 exports.default = InviteDB;
 // module.exports = Chat;

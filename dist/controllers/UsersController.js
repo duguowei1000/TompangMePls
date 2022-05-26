@@ -3,73 +3,115 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveUserChoice = void 0;
+exports.findUserChoice = exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
 const User_1 = __importDefault(require("../models/User"));
+const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
 const router = express_1.default.Router();
+const invitedata_1 = require("../data/invitedata");
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
     try {
-        await User_1.default.deleteMany({});
-        await User_1.default.create([
-            {
-                username: "mrdgw",
-                chatid: 427599753,
-                timeslot: 1652981050592,
-                destination: ""
-                // password: bcrypt.hashSync("12345", saltRounds),
-            },
-            {
-                username: "spareGw",
-                chatid: 5318610042,
-                timeslot: 1652981050592,
-                destination: ""
-                // password: bcrypt.hashSync("12345", saltRounds),
-            },
-        ]);
+        await inviteLinkDB_1.default.deleteMany({});
+        // await InviteDB.create(
+        //   [
+        //   ]
+        // );
         res.send("Users Seed");
     }
     catch (error) {
         console.log(error);
     }
 });
-const saveUserChoice = async (ctxt, time, destinationChoice) => {
-    // console.log('chatusername',ctxt.chat.username)
-    // console.log('destChoice',destinationChoice)
-    console.log('timeChoice', time);
+//Driver should not see another driver
+const findUserChoice = async (session) => {
+    console.log("session", session);
+    const enterAL = session.enterAL;
+    const timeslot = session.timeslot;
+    const locationToMeet = session.locationToMeet;
+    const isDriving = session.isDriving; //user is driver or not
+    if (isDriving.exist) {
+        const specificSlotAvailable = await inviteLinkDB_1.default.findOne({
+            $and: [
+                { isDriving: { exist: false } },
+                { enterAL: enterAL },
+                { timeslot: timeslot },
+                { locationToMeet: { locationToMeet: locationToMeet } }
+            ]
+        });
+        console.log("specificSlotAvailable", specificSlotAvailable);
+        if (!specificSlotAvailable) // no rooms that match, need create for next step**
+         {
+            console.log("suggested addtional", (0, invitedata_1.suggestSpecificTimeslot)(session));
+            const suggestUserSpecificSlot = (0, invitedata_1.suggestSpecificTimeslot)(session);
+            return [...suggestUserSpecificSlot, ...invitedata_1.suggestions];
+            console.log("suggested ", invitedata_1.suggestions);
+        }
+    }
+};
+exports.findUserChoice = findUserChoice;
+const saveUserChoice = async (ctxt, selectedSlot) => {
+    const enterAL = selectedSlot.enterAL;
+    const timeslot = selectedSlot.timeslot;
+    const locationToMeet = selectedSlot.locationToMeet;
+    const isDriving = selectedSlot.isDriving;
+    console.log('selectedSlot', selectedSlot);
     try {
-        const user = await User_1.default.find({ username: ctxt.chat.username });
-        console.log("userdata", user[0]);
+        const user = await inviteLinkDB_1.default.find({ invitedMembers: [{ username: ctxt.chat.username }] });
+        const specificSlot = await inviteLinkDB_1.default.find({
+            $and: [
+                { timeslot: { date: date } },
+                { locationToMeet: { locationToMeet: locationToMeet } }
+            ]
+        });
         const userName = user[0].username; //await User.findOne({ username: ctxt.chat.username });
-        const userDestination = user[0].destination; //await User.findOne({ destination: destinationChoice });
+        const userlocationToMeet = user[0].locationToMeet; //await User.findOne({ destination: destinationChoice });
         const time = user[0].timeslot; //await User.findOne({ timeslot: time });
-        if (userDestination === destinationChoice) {
-            return console.log(userDestination);
+        // if(userlocationToMeet === destinationChoice){ return console.log(userDestination)}
+        // console.log(`userName${userName} && userDest${userDestination} && time ${time}` )
+        // if (userName && userDestination){
+        //   await ctxt.reply(`You have already chosen a ${userDestination}, update your choice?`)//, { reply_markup: timeMenu });
+        //   console.log(`You have already chosen a ${userDestination}, update your choice?`) ;
+        // } 
+        console.log("userdata", user);
+        console.log("userdata", specificSlot);
+        if (userName) { ///should not happen
+            console.log(`userName${userName} && userDest${userlocationToMeet} && time ${time} , please press /start to update`);
+            ctxt.reply(`You already chose ${time} && userDest${userlocationToMeet} , please press /start to update`);
         }
-        console.log(`userName${userName} && userDest${userDestination} && time ${time}`);
-        if (userName && userDestination) {
-            await ctxt.reply(`You have already chosen a ${userDestination}, update your choice?`); //, { reply_markup: timeMenu });
-            console.log(`You have already chosen a ${userDestination}, update your choice?`);
-        }
-        else {
-            // console.log(ctxt.chat)
-            ctxt.reply(`You chose ${time}`);
-            console.log(`${ctxt.chat.username} chose Time >>> ${time}`); //scheduleDatabase[i].timeDisplay)
-            const createdListing = await User_1.default.create({
-                chatid: `${ctxt.chat.id}`,
-                username: `${ctxt.chat.username}`,
-                timeslot: Date.now(),
-                destination: "Jurong East"
-            });
-            console.log("created New entry to DB", createdListing);
+        else if (!specificSlot) { //create that specific timeslot for the user if no existing
+            const totalCapacity = () => {
+                if (isDriving.exist)
+                    return isDriving.spareCapacity;
+                else
+                    return 4;
+            }; //OR carpool (4pax)
+            const addMemberToTimeslot = {
+                grpchatid: `grpchatid from chats`,
+                enterAL: enterAL,
+                locationToMeet: locationToMeet,
+                timeslot: timeslot,
+                invitedMembers: [
+                    {
+                        username: `${ctxt.chat.username}`,
+                        isDriving: false,
+                        timeInvited: Date.now(),
+                        timeToExpire: Date.now() //+ 3mins
+                        //Derived time to delete member invite if no news after 3mins
+                    }
+                ],
+                capacity: totalCapacity() //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            };
+            const createdTimeslot = await inviteLinkDB_1.default.create(addMemberToTimeslot);
+            console.log("created New entry to DB", createdTimeslot);
         }
     }
     catch (error) {
-        console.log("error");
+        console.log("try error");
     }
-    // await outputSuggestedMRT(ctxt)
 };
 exports.saveUserChoice = saveUserChoice;
+// await outputSuggestedMRT(ctxt)
 router.post("/", async (req, res) => {
     // console.log("req.body", req.body);
     try {

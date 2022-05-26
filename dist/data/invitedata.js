@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.suggestions = void 0;
+exports.suggestSpecificTimeslot = exports.suggestions = void 0;
 const trialDate = new Date;
 trialDate.getDate();
 console.log(trialDate);
@@ -18,22 +18,47 @@ console.log('date', y_);
 const z_ = new Date(qwe);
 console.log('date', z_);
 /////////////
+const roundNearest30 = (num) => {
+    return Math.round(num / 30) * 30;
+};
+const suggestSpecificTimeslot = (session) => {
+    console.log("session", session);
+    const array = [{
+            enterAL: session.enterAL,
+            locationToMeet: "Jurong East",
+            timeslot: {
+                date: session.timeslot.date,
+                day: session.timeslot.day,
+                timing: roundNearest30(session.timeslot.timing)
+            }
+        },
+        {
+            enterAL: session.enterAL,
+            locationToMeet: "Choa Chu Kang",
+            timeslot: {
+                date: session.timeslot.date,
+                day: session.timeslot.day,
+                timing: roundNearest30(session.timeslot.timing)
+            }
+        }];
+    return array;
+};
+exports.suggestSpecificTimeslot = suggestSpecificTimeslot;
 const suggestions = [{
-        chatid: 427599753,
+        grpchatid: 427599753,
         enterAL: false,
         locationToMeet: "Jurong East",
-        //username: { type: String, unique: true, required: true },
-        timeslot: { date: x_, day: "Thurs", timing: "1530" },
+        timeslot: { date: x_, day: "Thurs", timing: 1530 },
         invitedMembers: [
             {
                 username: "tuxedo",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: y_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             },
             {
                 username: "Coke",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: z_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }
@@ -41,20 +66,20 @@ const suggestions = [{
         capacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
     },
     {
-        chatid: 327592353,
+        grpchatid: 327592353,
         enterAL: true,
         locationToMeet: "Choa Chu Kang",
         //username: { type: String, unique: true, required: true },
-        timeslot: { date: x_, day: "Wed", timing: "1530" },
+        timeslot: { date: x_, day: "Wed", timing: 2030 },
         invitedMembers: [
             {
                 username: "sprite",
-                isDriving: true,
+                isDriving: { exist: true, spareCapacity: 3 },
                 timeInvited: y_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }, {
                 username: "honeylemon",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: z_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }
@@ -77,13 +102,13 @@ const chats = [
         invitedMembers: [
             {
                 username: "tuxedo",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: z_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             },
             {
                 username: "Coke",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: x_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }
@@ -99,12 +124,12 @@ const chats = [
         invitedMembers: [
             {
                 username: "sprite",
-                isDriving: true,
+                isDriving: { exist: true, spareCapacity: 3 },
                 timeInvited: y_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }, {
                 username: "honeylemon",
-                isDriving: false,
+                isDriving: { exist: false, spareCapacity: null },
                 timeInvited: x_ //{ type: Date },
                 //Derived time to delete member invite if no news after 3mins
             }

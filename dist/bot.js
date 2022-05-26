@@ -50,7 +50,7 @@ bot.use((0, grammy_1.session)({
             isDriving: { exist: undefined, spareCapacity: null },
             timeslot: { date: null, day: null, timing: null },
             locationToMeet: "",
-            favoriteIds: [],
+            suggestionTimeslots: [],
         };
     },
 }));
@@ -62,7 +62,7 @@ const initiallise = {
     isDriving: { exist: undefined, spareCapacity: null },
     timeslot: { day: null, timing: null },
     locationToMeet: "",
-    favoriteIds: [],
+    suggestionTimeslots: [],
 };
 /////////////FUNCTION for saving username and choice of time///////////
 // const outputSuggestedMRT = async (ctxt) => {
@@ -81,16 +81,18 @@ calculateMenu
     .dynamic(() => {
     const range = new menu_1.MenuRange();
     for (let i = 0; i < invitedata_1.suggestions.length; i++) {
-        const gotDriver = (i) => { if (invitedata_1.suggestions[i].enterAL) {
-            return "Incl. Driver";
-        }
-        else
-            return "No Driver"; };
-        range.text(`${invitedata_1.suggestions[i].timeslot.day} ${invitedata_1.suggestions[i].timeslot.timing}@${invitedata_1.suggestions[i].locationToMeet} (${invitedata_1.suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, (ctx) => {
-            //  console.log(ctx.chat)
-            const date = invitedata_1.suggestions[i].timeslot.date;
-            const locationToMeet = invitedata_1.suggestions[i].locationToMeet;
-            (0, UsersController_1.saveUserChoice)(ctx, date, locationToMeet);
+        const gotDriver = (i) => {
+            const x = invitedata_1.suggestions[i].invitedMembers;
+            for (const element of x) {
+                if (element.isDriving.exist) {
+                    return "Incl. Driver";
+                }
+                else
+                    return "No Driver";
+            }
+        };
+        range.text(`${invitedata_1.suggestions[i].timeslot.day} ${invitedata_1.suggestions[i].timeslot.timing} @ ${invitedata_1.suggestions[i].locationToMeet} (${invitedata_1.suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, (ctx) => {
+            (0, UsersController_1.saveUserChoice)(ctx, invitedata_1.suggestions[i]); //output invitelink
         })
             .row();
     }
@@ -120,6 +122,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.timeslot.timing = timeWrote;
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
+    ctx.session.suggestionTimeslots = (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestions
     await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", { reply_markup: calculateMenu });
 });
 const days_menu = new menu_1.Menu("days_menu");
