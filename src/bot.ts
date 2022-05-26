@@ -3,52 +3,54 @@ dotenv.config();
 import { Bot, Context, session, SessionFlavor, Composer, InlineKeyboard, Keyboard } from "grammy";
 import { Menu, MenuRange, } from "@grammyjs/menu";
 import { Router } from "@grammyjs/router";
-import { saveUserChoice, findUserChoice} from "./controllers/UsersController";
+import { saveUserChoice, findUserChoice } from "./controllers/UsersController";
 import { dishes } from "./dish";
 import scheduleDatabase from "./data/time";
-import integerToDay from "./data/day";
+import integerToDay, {monthsArray} from "./data/arrays";
 import { suggestions } from "./data/invitedata";
+import { time } from "console";
 
 
 //////BOT
-console.log(">>> in bot.ts >>>",process.env.BOT_TOKEN)
+console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN)
 if (process.env.BOT_TOKEN == null) throw Error("BOT_TOKEN is missing.");
 const bot = new Bot(`${process.env.BOT_TOKEN}`);
 
 interface SessionData {
-    step: "idle" |"userdriver"|"driver"|"days"|"time"| "calculate" ; 
+    step: "idle" | "userdriver" | "driver" | "days" | "time" | "calculate";
     timeslot: any,
     favoriteIds: string[];
     username: string[];
-    
+    suggestionTimeslots: any[];
+
 }
 type MyContext = Context & SessionFlavor<SessionData>;
 
 bot.use(session({
-    initial(){
-        return { 
-            step: "idle", 
+    initial() {
+        return {
+            step: "idle",
             chatid: null,
             username: "",
             enterAL: undefined,
-            isDriving:{ exist: undefined , spareCapacity: null },
-            timeslot: { date: null,  day: null, timing: null },
+            isDriving: { exist: undefined, spareCapacity: null },
+            timeslot: { date: null, day: null, timing: null },
             locationToMeet: "",
-            suggestionTimeslots: [],  
-              
+            suggestionTimeslots: undefined,
+
         };
     },
 }));
 
 const initiallise = {
-    step: "idle", 
+    step: "idle",
     chatid: null,
     username: "",
     enterAL: undefined,
-    isDriving:{ exist: undefined , spareCapacity: null },
+    isDriving: { exist: undefined, spareCapacity: null },
     timeslot: { day: null, timing: null },
     locationToMeet: "",
-    suggestionTimeslots: [],  
+    suggestionTimeslots: [],
 }
 
 /////////////FUNCTION for saving username and choice of time///////////
@@ -66,37 +68,37 @@ const initiallise = {
 ////////////////OUTPUT MENU///////////
 
 ////DYNAMIC MENU\\\\
+// .url("About", "https://grammy.dev/plugins/menu").row()
 
 
 const calculateMenu = new Menu("calculateMenu");
 calculateMenu
-    .url("About", "https://grammy.dev/plugins/menu").row()
-    .dynamic(() => {
+    .dynamic((ctx) => {
         const range = new MenuRange();
-        for (let i = 0; i < suggestions.length; i++) {
-
-
-            const gotDriver = (i:number) => {
-                const x= suggestions[i].invitedMembers
-                for (const element of x) {
-                    if(element.isDriving.exist)
-                    {return "Incl. Driver"}else return "No Driver"}
+        const suggestOutput = ctx.session.suggestionTimeslots
+        for (let i = 0; i < suggestOutput.length; i++) {
+            const gotDriver = (i: number) => {
+                const checkDriver = suggestOutput[i]?.invitedMembers //optional chaining for specific timeslots
+                if (checkDriver === undefined) return "No Driver"
+                for (const element of checkDriver) {
+                    if (element.isDriving.exist) { return "Incl. Driver" } else return "No Driver"
                 }
+            }
 
             range.text(
-                `${suggestions[i].timeslot.day} ${suggestions[i].timeslot.timing} @ ${suggestions[i].locationToMeet} (${suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, 
-                
+                `(${suggestOutput[i].timeslot.day}) ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`,
+
                 (ctx) => {
-                    
-                    saveUserChoice(ctx, suggestions[i]) //output invitelink
+
+                    saveUserChoice(ctx, suggestOutput[i]) //output invitelink
                 })
                 .row();
         }
         return range;
     }
     )
-    .text("Go Back", (ctx)=>{
-        ctx.session.timeslot= { date: null, day: null, timing: null }
+    .text("Go Back", (ctx) => {
+        ctx.session.timeslot = { date: null, day: null, timing: null }
         ctx.session.step = "day";
         ctx.menu.nav("days_menu")
         ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" })
@@ -110,54 +112,73 @@ const stepRouter = new Router<MyContext>((ctx) => ctx.session.step);
 // Define step that handles the time.
 stepRouter.route("time", async (ctx) => {
     const timeWrote = parseInt(ctx.msg?.text ?? "", 10);
-    console.log(timeWrote)
+    console.log("timewrote", timeWrote)
+
+
     if (isNaN(timeWrote)) {
-      await ctx.reply("That is not a valid day, try again!");
-      return;
-    }else if (timeWrote < 600 || 2200 < timeWrote){
-        await ctx.reply(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, 
-        { parse_mode: "HTML" });
+        await ctx.reply("That is not a valid day, try again!");
         return;
-      }
-    ctx.session.timeslot.timing = timeWrote;
+    } else if (timeWrote < 600 || 2200 < timeWrote) {
+        await ctx.reply(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`,
+            { parse_mode: "HTML" });
+        return;
+    }
+    const parseTime = timeWrote.toString()
+    const re = new RegExp('^[0-9]{3}$') //check 3 digits => add 0 to front
+    if (parseTime.match(re)) {
+        const added = "0".concat(digits)
+        ctx.session.timeslot.timing = added
+        console.log("added",added)
+
+    }else ctx.session.timeslot.timing = parseTime;
+
+    const wroteMins = String(timeWrote).slice(-2)
+    const wroteHrs = String(timeWrote).slice(0, 2)
+    const initialDate = new Date(ctx.session.timeslot.date) //update derived date from previous entry
+    initialDate.setHours(Number(wroteHrs));  //set hours
+    initialDate.setMinutes(Number(wroteMins)); //set mins
+
+    ctx.session.timeslot.date = initialDate //set user choice for date
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    ctx.session.suggestionTimeslots = findUserChoice(ctx.session)   //find if it is amongst existing DB, else to add to suggestions
-    await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", {reply_markup: calculateMenu});
-    })
+    ctx.session.suggestionTimeslots = await findUserChoice(ctx.session)   //find if it is amongst existing DB, else to add to suggestion
+    console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots)
+    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${monthsArray[ctx.session.timeslot.date.getMonth()]} ${integerToDay[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
+    `, { reply_markup: calculateMenu , parse_mode: "HTML" });
+})
 
 const days_menu = new Menu("days_menu");
 days_menu
     .dynamic(() => {
         const range = new MenuRange();
         for (let i = 0; i < 3; i++) {
-            const d = new Date() 
-            const dateSpecified = new Date() 
-            const thisDay = ()=>{
-                if((d.getDay() + i)>6){
+            const d = new Date()
+            const dateSpecified = new Date()
+            const thisDay = () => {
+                if ((d.getDay() + i) > 6) {
                     return (d.getDay() + i - 6)
-                }else return (d.getDay() + i) //day in integer
-            } 
+                } else return (d.getDay() + i) //day in integer
+            }
             dateSpecified.setDate(dateSpecified.getDate() + i) //date in GMT+8
-            console.log("date"+dateSpecified+"day"+thisDay() )
-            const outText =(i)=>{
-                if(i===0) return `Today`
-                else if(i===1) return`${integerToDay[thisDay()]} (Tomorrow)`
+            // console.log("date"+dateSpecified+"day"+thisDay() )
+            const outText = (i) => {
+                if (i === 0) return `Today`
+                else if (i === 1) return `${integerToDay[thisDay()]} (Tomorrow)`
                 else return integerToDay[thisDay()]
             }
-            range.text( outText(i), (ctx) => {
-                    ctx.session.step = "time"
-                    ctx.session.timeslot = {date: dateSpecified , day: integerToDay[thisDay()]}
-                    ctx.menu.close()
-                    ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" })
-                })
+            range.text(outText(i), (ctx) => {
+                ctx.session.step = "time"
+                ctx.session.timeslot = { date: dateSpecified, day: integerToDay[thisDay()] }
+                ctx.menu.close()
+                ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" })
+            })
                 .row();
         }
         return range;
     }
     )
-    .text("Go Back", (ctx)=>{
-        ctx.session.isDriving = { exist: undefined , spareCapacity: null }
+    .text("Go Back", (ctx) => {
+        ctx.session.isDriving = { exist: undefined, spareCapacity: null }
         ctx.menu.nav("userDriver_menu")
         ctx.editMessageText(userDriverText(), { parse_mode: "HTML" })
     })
@@ -169,29 +190,29 @@ const driver_menu = new Menu("driver_menu")
             range
                 .text(`${i}`, (ctx) => {
                     ctx.session.isDriving.spareCapacity = i
-                    ctx.editMessageText(dayText(ctx.session.enterAL), {reply_markup: days_menu, parse_mode: "HTML" })
+                    ctx.editMessageText(dayText(ctx.session.enterAL), { reply_markup: days_menu, parse_mode: "HTML" })
                 })
-                .row() 
+                .row()
         }
         return range;
     }
     )
-    .text("Go Back", (ctx)=>{
-        ctx.session.isDriving = { exist: undefined , spareCapacity: null }
+    .text("Go Back", (ctx) => {
+        ctx.session.isDriving = { exist: undefined, spareCapacity: null }
         ctx.menu.nav("userDriver_menu")
     })
 
- 
+
 const locationText = (enterLodge) => {
-    if(enterLodge){
+    if (enterLodge) {
         return `What <b>time</b> do you want to <b>reach Animal Lodge</b> ?`;
-    }else return `What <b>time</b> do you want to <b>leave Animal Lodge</b> ?`
-} 
+    } else return `What <b>time</b> do you want to <b>leave Animal Lodge</b> ?`
+}
 const dayText = (enterLodge) => {
-    if(enterLodge){
+    if (enterLodge) {
         return `Which <b>day</b> do you want to <b>reach Animal Lodge</b> ?`;
-    }else return `Which <b>day</b> do you want to <b>leave Animal Lodge</b> ?`
-} 
+    } else return `Which <b>day</b> do you want to <b>leave Animal Lodge</b> ?`
+}
 const userDriver_menu = new Menu("userDriver_menu")
     // .text("Passenger", (ctx) => ctx.reply("Passenger"))
     // .text("Driver", (ctx) => ctx.reply("Driver")).row()
@@ -210,7 +231,7 @@ const userDriver_menu = new Menu("userDriver_menu")
         (ctx) => {
             ctx.session.isDriving.exist = true
             ctx.editMessageText(`How many passengers can you take?`, { parse_mode: "HTML" })
-         } // handler
+        } // handler
     ).row()
     .back("Go Back")
 
@@ -224,16 +245,16 @@ const start_menu = new Menu("start-menu")
         (ctx) => {
             ctx.editMessageText(userDriverText(), { parse_mode: "HTML" })
             ctx.session = {
-            step: "idle", 
-            chatid: null,
-            username: "",
-            enterAL : true,
-            isDriving:{ exist: undefined , spareCapacity: null },
-            timeslot: { day: null, timing: null },
-            locationToMeet: "",
-            favoriteIds: [],  
-            } 
-    } // handler
+                step: "idle",
+                chatid: null,
+                username: "",
+                enterAL: true,
+                isDriving: { exist: undefined, spareCapacity: null },
+                timeslot: { day: null, timing: null },
+                locationToMeet: "",
+                suggestionTimeslots: undefined,
+            }
+        } // handler
     ).row()
     .submenu(
         "Leaving Animal Lodge",
@@ -241,7 +262,7 @@ const start_menu = new Menu("start-menu")
         (ctx) => {
             ctx.editMessageText(userDriverText(), { parse_mode: "HTML" }) // handler
             ctx.session.enterAL = false
-    }
+        }
     )
 
 //REGISTER
@@ -260,18 +281,19 @@ bot.use(calculateMenu);
 bot.use(stepRouter)
 bot.use(start_menu);
 bot.command("start", async (ctx) => {
+    ctx.session = initiallise
     ctx.session.chatid = ctx.chat.id
     ctx.session.username = ctx.chat.username
     await ctx.reply(startText(), { reply_markup: start_menu, parse_mode: "HTML" });
 });
-const startText =() => `Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`;
+const startText = () => `Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`;
 
 
 ///////////////////////////////////////////////////////////////////////TESTING
 
 bot.command("session", async (ctx) => {
     //await bot.api.sendMessage(427599753, "hihihihihi");
-    console.log("session",ctx.session)
+    console.log("session", ctx.session)
 })
 
 bot.command("add", (ctx) => {
@@ -282,15 +304,15 @@ bot.command("add", (ctx) => {
 bot.command("menu", async (ctx) => {
     const msgtext = ctx.msg.text;
     console.log(msgtext)
-    
+
 });
 
 bot.command("adduser", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
     const username = ctx.chat
     const chat = ctx;
-    console.log("chat ",username)
-    console.log("chatdetails",chat)
+    console.log("chat ", username)
+    console.log("chatdetails", chat)
 });
 
 // bot.command("start", (ctx) => ctx.reply("Hello there!"));

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findUserChoice = exports.saveUserChoice = void 0;
+exports.findSuggestions = exports.findUserChoice = exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
 const User_1 = __importDefault(require("../models/User"));
 const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
@@ -23,6 +23,36 @@ router.get("/seed", async (req, res) => {
         console.log(error);
     }
 });
+//Criteria for suggestions : within 1.5 hrs of indicated time
+const findSuggestions = async (session) => {
+    console.log("session", session);
+    const enterAL = session.enterAL;
+    const timeslot = new Date(session.timeslot.date);
+    timeslot.getTime();
+    console.log("getTime", timeslot);
+    //const locationToMeet = session.locationToMeet
+    const isDriving = session.isDriving; //user is driver or not
+    if (isDriving.exist) {
+        const slotAvailable_D = await inviteLinkDB_1.default.find({
+            $and: [
+                { isDriving: { exist: false } },
+                { enterAL: enterAL },
+                { timeslot: { $in: [timeslot - 5400000, timeslot + 5400000] } },
+            ]
+        });
+        return slotAvailable_D;
+    }
+    else if (!isDriving.exist) {
+        const slotAvailable_ND = await inviteLinkDB_1.default.findOne({
+            $and: [
+                { enterAL: enterAL },
+                { timeslot: { $in: [timeslot - 5400000, timeslot + 5400000] } },
+            ]
+        });
+        return slotAvailable_ND;
+    }
+};
+exports.findSuggestions = findSuggestions;
 //Driver should not see another driver
 const findUserChoice = async (session) => {
     console.log("session", session);
@@ -30,8 +60,10 @@ const findUserChoice = async (session) => {
     const timeslot = session.timeslot;
     const locationToMeet = session.locationToMeet;
     const isDriving = session.isDriving; //user is driver or not
+    const suggestions = await findSuggestions(session); //get from database
+    console.log("suggestions", suggestions);
     if (isDriving.exist) {
-        const specificSlotAvailable = await inviteLinkDB_1.default.findOne({
+        const specificSlotAvailable_D = await inviteLinkDB_1.default.findOne({
             $and: [
                 { isDriving: { exist: false } },
                 { enterAL: enterAL },
@@ -39,13 +71,27 @@ const findUserChoice = async (session) => {
                 { locationToMeet: { locationToMeet: locationToMeet } }
             ]
         });
-        console.log("specificSlotAvailable", specificSlotAvailable);
-        if (!specificSlotAvailable) // no rooms that match, need create for next step**
+        console.log("specificSlotAvailable", specificSlotAvailable_D);
+        if (!specificSlotAvailable_D) // no rooms that match, need create for next step**
+         {
+            // console.log("suggested addtional",suggestSpecificTimeslot(session))
+            const suggestUserSpecificSlot = (0, invitedata_1.suggestSpecificTimeslot)(session);
+            return [...suggestions, ...suggestUserSpecificSlot];
+        }
+    }
+    else if (!isDriving.exist) {
+        const specificSlotAvailable_ND = await inviteLinkDB_1.default.findOne({
+            $and: [
+                { enterAL: enterAL },
+                { timeslot: timeslot },
+                { locationToMeet: { locationToMeet: locationToMeet } }
+            ]
+        });
+        if (!specificSlotAvailable_ND) // no rooms that match, need create for next step**
          {
             console.log("suggested addtional", (0, invitedata_1.suggestSpecificTimeslot)(session));
             const suggestUserSpecificSlot = (0, invitedata_1.suggestSpecificTimeslot)(session);
-            return [...suggestUserSpecificSlot, ...invitedata_1.suggestions];
-            console.log("suggested ", invitedata_1.suggestions);
+            return [...suggestions, ...suggestUserSpecificSlot];
         }
     }
 };

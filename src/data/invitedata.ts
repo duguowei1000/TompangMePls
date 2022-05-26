@@ -21,28 +21,41 @@ console.log('date', z_)
 
 import InviteDB from "../models/inviteLinkDB";
 /////////////
-
-const roundNearest30 = (num:number) => {
-    return Math.round(num / 30) * 30;
+  function roundToNearest30(date = new Date()) {
+    const minutes = 30;
+    const ms = 1000 * 60 * minutes;
+  
+    // 👇️ replace Math.round with Math.ceil to always round UP
+    return new Date(Math.round(date.getTime() / ms) * ms);
   }
 const suggestSpecificTimeslot = (session) => {
     console.log("session",session)
+    const rounded = roundToNearest30(session.timeslot.date)
+    const getHours= String(rounded.getHours())
+    const getMins= String(rounded.getMinutes())
+    const adjustMins = () => {
+        if (getMins ==="0") {return "00"}else {return getMins} 
+    }
+    // console.log(">>>>rounded",rounded )
+    // console.log(">>>>getHours",getHours )
+    // console.log(">>>>getMins",getMins )
+    // console.log(">>>>hoursmins",getHours.concat(adjustMins()) )
     const array = [{
         enterAL: session.enterAL,
-        locationToMeet: "Jurong East",
+        locationToMeet: "JE Mrt",
         timeslot: {
-            date: session.timeslot.date,
+            date: rounded,
             day: session.timeslot.day,
-            timing: roundNearest30(session.timeslot.timing)
+            timing: getHours.concat(adjustMins())
         }
     },
     {
         enterAL: session.enterAL,
-        locationToMeet: "Choa Chu Kang",
+        locationToMeet: "CCK Mrt",
         timeslot: {
-            date: session.timeslot.date,
+            date: rounded,
             day: session.timeslot.day,
-            timing: roundNearest30(session.timeslot.timing)
+            timing: getHours.concat(adjustMins())
         }
     }]
     return array
@@ -53,8 +66,8 @@ const suggestSpecificTimeslot = (session) => {
 const suggestions = [{
     grpchatid: 427599753,//[{ type: Number, unique: true }],
     enterAL: false,//{type: Boolean},
-    locationToMeet: "Jurong East",//{type: String},
-    timeslot: { date: x_, day: "Thurs", timing: 1530 },//{ type: Date }, //, default: Date.now 
+    locationToMeet: "JE Mrt",//{type: String},
+    timeslot: { date: x_, day: "Fri", timing: 1530 },//{ type: Date }, //, default: Date.now 
     invitedMembers: [
         {
             username: "tuxedo",//{ type: String },
@@ -73,9 +86,9 @@ const suggestions = [{
 {
     grpchatid: 327592353,//[{ type: Number, unique: true }],
     enterAL: true,//{type: Boolean},
-    locationToMeet: "Choa Chu Kang",//{type: String},
+    locationToMeet: "CCK Mrt",//{type: String},
     //username: { type: String, unique: true, required: true },
-    timeslot: { date: x_, day: "Wed", timing: 2030 },//{ type: Date }, //, default: Date.now 
+    timeslot: { date: x_, day: "Fri", timing: 2030 },//{ type: Date }, //, default: Date.now 
     invitedMembers: [
         {
             username: "sprite",//{ type: String },
@@ -98,11 +111,11 @@ const chats = [
     {
         chatid: 427599753,//[{ type: Number, unique: true }],
         enterAL: false,//{type: Boolean},
-        locationToMeet: "Jurong East",//{type: String},
+        locationToMeet: "JE mrt",//{type: String},
         //username: { type: String, unique: true, required: true },
         timeslot: {
             date: y_,
-            day: "Thurs",
+            day: "Fri",
             timing: "1530"
         },//{ type: Date }, //, default: Date.now 
         invitedMembers: [
@@ -123,7 +136,7 @@ const chats = [
     {
         chatid: 327592353,//[{ type: Number, unique: true }],
         enterAL: true,//{type: Boolean},
-        locationToMeet: "Choa Chu Kang",//{type: String},
+        locationToMeet: "CCK Mrt",//{type: String},
         //username: { type: String, unique: true, required: true },
         timeslot: { date: x_, day: "Tues", timing: "1230pm" },//{ type: Date }, //, default: Date.now 
         invitedMembers: [

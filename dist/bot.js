@@ -22,9 +22,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -33,8 +30,7 @@ const menu_1 = require("@grammyjs/menu");
 const router_1 = require("@grammyjs/router");
 const UsersController_1 = require("./controllers/UsersController");
 const dish_1 = require("./dish");
-const day_1 = __importDefault(require("./data/day"));
-const invitedata_1 = require("./data/invitedata");
+const arrays_1 = __importStar(require("./data/arrays"));
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
 if (process.env.BOT_TOKEN == null)
@@ -50,7 +46,7 @@ bot.use((0, grammy_1.session)({
             isDriving: { exist: undefined, spareCapacity: null },
             timeslot: { date: null, day: null, timing: null },
             locationToMeet: "",
-            suggestionTimeslots: [],
+            suggestionTimeslots: undefined,
         };
     },
 }));
@@ -75,15 +71,18 @@ const initiallise = {
 // }
 ////////////////OUTPUT MENU///////////
 ////DYNAMIC MENU\\\\
+// .url("About", "https://grammy.dev/plugins/menu").row()
 const calculateMenu = new menu_1.Menu("calculateMenu");
 calculateMenu
-    .url("About", "https://grammy.dev/plugins/menu").row()
-    .dynamic(() => {
+    .dynamic((ctx) => {
     const range = new menu_1.MenuRange();
-    for (let i = 0; i < invitedata_1.suggestions.length; i++) {
+    const suggestOutput = ctx.session.suggestionTimeslots;
+    for (let i = 0; i < suggestOutput.length; i++) {
         const gotDriver = (i) => {
-            const x = invitedata_1.suggestions[i].invitedMembers;
-            for (const element of x) {
+            const checkDriver = suggestOutput[i]?.invitedMembers; //optional chaining for specific timeslots
+            if (checkDriver === undefined)
+                return "No Driver";
+            for (const element of checkDriver) {
                 if (element.isDriving.exist) {
                     return "Incl. Driver";
                 }
@@ -91,8 +90,8 @@ calculateMenu
                     return "No Driver";
             }
         };
-        range.text(`${invitedata_1.suggestions[i].timeslot.day} ${invitedata_1.suggestions[i].timeslot.timing} @ ${invitedata_1.suggestions[i].locationToMeet} (${invitedata_1.suggestions[i].invitedMembers.length}pax ${gotDriver(i)})`, (ctx) => {
-            (0, UsersController_1.saveUserChoice)(ctx, invitedata_1.suggestions[i]); //output invitelink
+        range.text(`(${suggestOutput[i].timeslot.day}) ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => {
+            (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); //output invitelink
         })
             .row();
     }
@@ -110,7 +109,7 @@ const stepRouter = new router_1.Router((ctx) => ctx.session.step);
 // Define step that handles the time.
 stepRouter.route("time", async (ctx) => {
     const timeWrote = parseInt(ctx.msg?.text ?? "", 10);
-    console.log(timeWrote);
+    console.log("timewrote", timeWrote);
     if (isNaN(timeWrote)) {
         await ctx.reply("That is not a valid day, try again!");
         return;
@@ -119,11 +118,27 @@ stepRouter.route("time", async (ctx) => {
         await ctx.reply(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" });
         return;
     }
-    ctx.session.timeslot.timing = timeWrote;
+    const parseTime = timeWrote.toString();
+    const re = new RegExp('^[0-9]{3}$'); //check 3 digits => add 0 to front
+    if (parseTime.match(re)) {
+        const added = "0".concat(digits);
+        ctx.session.timeslot.timing = added;
+        console.log("added", added);
+    }
+    else
+        ctx.session.timeslot.timing = parseTime;
+    const wroteMins = String(timeWrote).slice(-2);
+    const wroteHrs = String(timeWrote).slice(0, 2);
+    const initialDate = new Date(ctx.session.timeslot.date); //update derived date from previous entry
+    initialDate.setHours(Number(wroteHrs)); //set hours
+    initialDate.setMinutes(Number(wroteMins)); //set mins
+    ctx.session.timeslot.date = initialDate; //set user choice for date
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
-    ctx.session.suggestionTimeslots = (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestions
-    await ctx.reply("Got it! we are searching for suitable timeslots! These are the suggestions Timeslots that best match your choice {}", { reply_markup: calculateMenu });
+    ctx.session.suggestionTimeslots = await (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestion
+    console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots);
+    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${arrays_1.monthsArray[ctx.session.timeslot.date.getMonth()]} ${arrays_1.default[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
+    `, { reply_markup: calculateMenu, parse_mode: "HTML" });
 });
 const days_menu = new menu_1.Menu("days_menu");
 days_menu
@@ -140,18 +155,18 @@ days_menu
                 return (d.getDay() + i); //day in integer
         };
         dateSpecified.setDate(dateSpecified.getDate() + i); //date in GMT+8
-        console.log("date" + dateSpecified + "day" + thisDay());
+        // console.log("date"+dateSpecified+"day"+thisDay() )
         const outText = (i) => {
             if (i === 0)
                 return `Today`;
             else if (i === 1)
-                return `${day_1.default[thisDay()]} (Tomorrow)`;
+                return `${arrays_1.default[thisDay()]} (Tomorrow)`;
             else
-                return day_1.default[thisDay()];
+                return arrays_1.default[thisDay()];
         };
         range.text(outText(i), (ctx) => {
             ctx.session.step = "time";
-            ctx.session.timeslot = { date: dateSpecified, day: day_1.default[thisDay()] };
+            ctx.session.timeslot = { date: dateSpecified, day: arrays_1.default[thisDay()] };
             ctx.menu.close();
             ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" });
         })
@@ -227,7 +242,7 @@ const start_menu = new menu_1.Menu("start-menu")
         isDriving: { exist: undefined, spareCapacity: null },
         timeslot: { day: null, timing: null },
         locationToMeet: "",
-        favoriteIds: [],
+        suggestionTimeslots: undefined,
     };
 } // handler
 ).row()
@@ -251,6 +266,7 @@ bot.use(calculateMenu);
 bot.use(stepRouter);
 bot.use(start_menu);
 bot.command("start", async (ctx) => {
+    ctx.session = initiallise;
     ctx.session.chatid = ctx.chat.id;
     ctx.session.username = ctx.chat.username;
     await ctx.reply(startText(), { reply_markup: start_menu, parse_mode: "HTML" });

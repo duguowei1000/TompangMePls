@@ -4,7 +4,7 @@ import InviteDB from "../models/inviteLinkDB";
 const router = express.Router();
 // const bcrypt = require("bcrypt");
 import { Router } from "@grammyjs/router";
-import { suggestions, suggestSpecificTimeslot } from "../data/invitedata";
+import { suggestSpecificTimeslot } from "../data/invitedata";
 
 
 // const saltRounds = 10;
@@ -24,6 +24,40 @@ router.get("/seed", async (req, res) => {
   }
 })
 
+//Criteria for suggestions : within 1.5 hrs of indicated time
+const findSuggestions = async (session) => {
+
+  console.log("session", session)
+  const enterAL = session.enterAL
+  const timeslot:any = new Date(session.timeslot.date) 
+  timeslot.getTime()
+  console.log("getTime", timeslot)
+  //const locationToMeet = session.locationToMeet
+  const isDriving = session.isDriving //user is driver or not
+
+  if(isDriving.exist){
+    const slotAvailable_D: any = await InviteDB.find({
+      $and: [
+        {isDriving: { exist : false }},  //specifically looking for grps without driver
+        { enterAL : enterAL },
+        { timeslot:  { $in:[timeslot-5400000 ,timeslot+5400000 ]}},
+      ]
+    })
+
+    return slotAvailable_D
+  }else if (!isDriving.exist){
+    const slotAvailable_ND: any = await InviteDB.findOne({
+      $and: [
+        { enterAL : enterAL },
+        { timeslot:  { $in:[timeslot-5400000 ,timeslot+5400000 ]}},
+      ]
+    })
+    return slotAvailable_ND
+
+  }
+    
+}
+
 //Driver should not see another driver
 const findUserChoice = async (session) => {
   console.log("session", session)
@@ -32,22 +66,39 @@ const findUserChoice = async (session) => {
   const locationToMeet = session.locationToMeet
   const isDriving = session.isDriving //user is driver or not
 
+  const suggestions = await findSuggestions(session)  //get from database
+  console.log("suggestions",suggestions)
   if(isDriving.exist){
-    const specificSlotAvailable: any = await InviteDB.findOne({
+    const specificSlotAvailable_D: any = await InviteDB.findOne({
       $and: [
-        {isDriving: { exist : false }},
+        {isDriving: { exist : false }},  //specifically looking for grps without driver
         { enterAL : enterAL },
         { timeslot: timeslot },
         { locationToMeet: { locationToMeet: locationToMeet } }
       ]
     })
-    console.log("specificSlotAvailable",specificSlotAvailable)
-    if (!specificSlotAvailable) // no rooms that match, need create for next step**
+    console.log("specificSlotAvailable",specificSlotAvailable_D)
+    if (!specificSlotAvailable_D) // no rooms that match, need create for next step**
+    {
+      // console.log("suggested addtional",suggestSpecificTimeslot(session))
+      const suggestUserSpecificSlot = suggestSpecificTimeslot(session)
+      return [ ...suggestions,...suggestUserSpecificSlot]
+
+    }
+  }else if (!isDriving.exist){
+    const specificSlotAvailable_ND: any = await InviteDB.findOne({
+      $and: [
+        { enterAL : enterAL },
+        { timeslot: timeslot },
+        { locationToMeet: { locationToMeet: locationToMeet } }
+      ]
+    })
+    if (!specificSlotAvailable_ND) // no rooms that match, need create for next step**
     {
       console.log("suggested addtional",suggestSpecificTimeslot(session))
       const suggestUserSpecificSlot = suggestSpecificTimeslot(session)
-      return [ ...suggestUserSpecificSlot,...suggestions]
-      console.log("suggested ",suggestions)
+      return [ ...suggestions,...suggestUserSpecificSlot]
+
     }
 
   }
@@ -91,9 +142,6 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
       console.log(`userName${userName} && userDest${userlocationToMeet} && time ${time} , please press /start to update`)
       ctxt.reply(`You already chose ${time} && userDest${userlocationToMeet} , please press /start to update`)
     } else if (!specificSlot) {         //create that specific timeslot for the user if no existing
-
-
-
       const totalCapacity = () => {
         if (isDriving.exist) return isDriving.spareCapacity
         else return 4
@@ -145,7 +193,7 @@ router.post("/", async (req, res) => {
 
 
 export default router
-export { saveUserChoice, findUserChoice }
+export { saveUserChoice, findUserChoice , findSuggestions}
 
 
 
