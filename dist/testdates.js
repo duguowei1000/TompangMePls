@@ -47,10 +47,10 @@ console.log('date', mili.getDay());
 //     return new Date(Math.round(date.getTime() / ms) * ms);
 //   }
 //   console.log(roundToNearest30(new Date(2022, 1, 24, 6, 15)));
-// //   console.log("timewrote",timeWrote)
-//   const digits = "122"
-//   const re = new RegExp('^[0-9]{3}$')
-//   if digits.match(re) {
-//       const added = "0".concat(digits)
-//       console.log(added)
-//     }
+//   console.log("timewrote",timeWrote)
+const digits = "122";
+const re = new RegExp('^[0-9]{3}$');
+if (digits.match(re)) {
+    const added = "0".concat(digits);
+    console.log(added);
+}

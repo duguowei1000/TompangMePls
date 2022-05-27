@@ -76,6 +76,7 @@ const calculateMenu = new menu_1.Menu("calculateMenu");
 calculateMenu
     .dynamic((ctx) => {
     const range = new menu_1.MenuRange();
+    console.log('>>>CalculatesuggestionsTimeslot', ctx.session.suggestionTimeslots);
     const suggestOutput = ctx.session.suggestionTimeslots;
     for (let i = 0; i < suggestOutput.length; i++) {
         const gotDriver = (i) => {
@@ -90,10 +91,13 @@ calculateMenu
                     return "No Driver";
             }
         };
-        range.text(`(${suggestOutput[i].timeslot.day}) ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => {
-            (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); //output invitelink
-        })
-            .row();
+        if (!suggestOutput[i].enterAL) { //Output for leaving AL
+            range.text(`${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} drop@${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => { (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); }).row(); //output invitelink
+        }
+        else if (suggestOutput[i].enterAL) {
+            range.text(//Output for entering AL
+            `${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => { (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); }).row(); //output invitelink
+        }
     }
     return range;
 })
@@ -121,7 +125,7 @@ stepRouter.route("time", async (ctx) => {
     const parseTime = timeWrote.toString();
     const re = new RegExp('^[0-9]{3}$'); //check 3 digits => add 0 to front
     if (parseTime.match(re)) {
-        const added = "0".concat(digits);
+        const added = "0".concat(parseTime);
         ctx.session.timeslot.timing = added;
         console.log("added", added);
     }

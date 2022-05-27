@@ -25,11 +25,11 @@ router.get("/seed", async (req, res) => {
 });
 //Criteria for suggestions : within 1.5 hrs of indicated time
 const findSuggestions = async (session) => {
-    console.log("session", session);
+    // console.log("sessionFindsuggestions", session)
     const enterAL = session.enterAL;
     const timeslot = new Date(session.timeslot.date);
     timeslot.getTime();
-    console.log("getTime", timeslot);
+    // console.log("getTimeFindsuggestions", timeslot)
     //const locationToMeet = session.locationToMeet
     const isDriving = session.isDriving; //user is driver or not
     if (isDriving.exist) {
@@ -43,7 +43,7 @@ const findSuggestions = async (session) => {
         return slotAvailable_D;
     }
     else if (!isDriving.exist) {
-        const slotAvailable_ND = await inviteLinkDB_1.default.findOne({
+        const slotAvailable_ND = await inviteLinkDB_1.default.find({
             $and: [
                 { enterAL: enterAL },
                 { timeslot: { $in: [timeslot - 5400000, timeslot + 5400000] } },
@@ -51,6 +51,7 @@ const findSuggestions = async (session) => {
         });
         return slotAvailable_ND;
     }
+    return;
 };
 exports.findSuggestions = findSuggestions;
 //Driver should not see another driver
@@ -60,7 +61,7 @@ const findUserChoice = async (session) => {
     const timeslot = session.timeslot;
     const locationToMeet = session.locationToMeet;
     const isDriving = session.isDriving; //user is driver or not
-    const suggestions = await findSuggestions(session); //get from database
+    const suggestions = await findSuggestions(session); //get from database relaxed criterion <timeslot within 90mins>
     console.log("suggestions", suggestions);
     if (isDriving.exist) {
         const specificSlotAvailable_D = await inviteLinkDB_1.default.findOne({
