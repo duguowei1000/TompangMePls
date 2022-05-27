@@ -1,5 +1,6 @@
 import express from "express";
 import Chat from "../models/Chat";
+import InviteDB from "../models/inviteLinkDB";
 const router = express.Router();
 // const bcrypt = require("bcrypt");
 

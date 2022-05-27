@@ -6,18 +6,61 @@ const router = express.Router();
 import { Router } from "@grammyjs/router";
 import { suggestSpecificTimeslot } from "../data/invitedata";
 
-
+//test
+const x_ = new Date("2022-05-29T03:00:00.000Z")
+console.log('datex', x_-5400000)
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
   try {
     await InviteDB.deleteMany({})
-    // await InviteDB.create(
-    //   [
+    await InviteDB.create(
+      [{
+        grpchatid: 427599753,//[{ type: Number, unique: true }],
+        enterAL: false,//{type: Boolean},
+        locationToMeet: "JE Mrt",//{type: String},
+        timeslot: { date: x_, day: "Fri", timing: 1530 },//{ type: Date }, //, default: Date.now 
+        invitedMembers: [
+            {
+                username: "tuxedo",//{ type: String },
+                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+                timeInvited: y_//{ type: Date },
+                //Derived time to delete member invite if no news after 3mins
+            },
+            {
+                username: "Coke",//{ type: String },
+                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+                timeInvited: z_//{ type: Date },
+                //Derived time to delete member invite if no news after 3mins
+            }],
+        capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+    },
+    {
+        grpchatid: 327592353,//[{ type: Number, unique: true }],
+        enterAL: true,//{type: Boolean},
+        locationToMeet: "CCK Mrt",//{type: String},
+        //username: { type: String, unique: true, required: true },
+        timeslot: { date: x_, day: "Fri", timing: 2030 },//{ type: Date }, //, default: Date.now 
+        invitedMembers: [
+            {
+                username: "sprite",//{ type: String },
+                isDriving: { exist: true, spareCapacity: 3 },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+                timeInvited: y_//{ type: Date },
+                //Derived time to delete member invite if no news after 3mins
+            }, {
+                username: "honeylemon",//{ type: String },
+                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+                timeInvited: z_//{ type: Date },
+                //Derived time to delete member invite if no news after 3mins
+            }
+    
+        ],
+        capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+    }
 
-    //   ]
+      ]
 
 
-    // );
+    );
     res.send("Users Seed")
   } catch (error) {
     console.log(error);
@@ -36,7 +79,7 @@ const findSuggestions = async (session) => {
   const isDriving = session.isDriving //user is driver or not
 
   if(isDriving.exist){
-    const slotAvailable_D: any = await InviteDB.find({
+    const slotAvailable_D: any = await InviteDB.find({ //all possible choices within the criterion
       $and: [
         {isDriving: { exist : false }},  //specifically looking for grps without driver
         { enterAL : enterAL },
@@ -46,7 +89,7 @@ const findSuggestions = async (session) => {
 
     return slotAvailable_D
   }else if (!isDriving.exist){
-    const slotAvailable_ND: any = await InviteDB.find({
+    const slotAvailable_ND: any = await InviteDB.find({ //all possible choices within the criterion
       $and: [
         { enterAL : enterAL },
         { timeslot:  { $in:[timeslot-5400000 ,timeslot+5400000 ]}},

@@ -134,9 +134,9 @@ stepRouter.route("time", async (ctx) => {
     const wroteMins = String(timeWrote).slice(-2);
     const wroteHrs = String(timeWrote).slice(0, 2);
     const initialDate = new Date(ctx.session.timeslot.date); //update derived date from previous entry
-    initialDate.setHours(Number(wroteHrs)); //set hours
-    initialDate.setMinutes(Number(wroteMins)); //set mins
-    ctx.session.timeslot.date = initialDate; //set user choice for date
+    initialDate.setHours(Number(wroteHrs)); //set RAW hours
+    initialDate.setMinutes(Number(wroteMins)); //set RAW mins
+    ctx.session.timeslot.date = initialDate; // This is RAW input DATE by user
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
     ctx.session.suggestionTimeslots = await (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestion
@@ -149,28 +149,22 @@ days_menu
     .dynamic(() => {
     const range = new menu_1.MenuRange();
     for (let i = 0; i < 3; i++) {
-        const d = new Date();
-        const dateSpecified = new Date();
-        const thisDay = () => {
-            if ((d.getDay() + i) > 6) {
-                return (d.getDay() + i - 6);
-            }
-            else
-                return (d.getDay() + i); //day in integer
+        const thisDay = (i) => {
+            const dateSpecified = new Date;
+            return dateSpecified.setDate(dateSpecified.getDate() + i); //next date alr
         };
-        dateSpecified.setDate(dateSpecified.getDate() + i); //date in GMT+8
-        // console.log("date"+dateSpecified+"day"+thisDay() )
+        const convertToDay = new Date(thisDay(i));
         const outText = (i) => {
             if (i === 0)
                 return `Today`;
             else if (i === 1)
-                return `${arrays_1.default[thisDay()]} (Tomorrow)`;
+                return `${arrays_1.default[convertToDay.getDay()]} (Tomorrow)`;
             else
-                return arrays_1.default[thisDay()];
+                return arrays_1.default[convertToDay.getDay()];
         };
         range.text(outText(i), (ctx) => {
             ctx.session.step = "time";
-            ctx.session.timeslot = { date: dateSpecified, day: arrays_1.default[thisDay()] };
+            ctx.session.timeslot = { date: convertToDay, day: arrays_1.default[convertToDay.getDay()] };
             ctx.menu.close();
             ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" });
         })

@@ -12,12 +12,17 @@ const qwe = mili.setDate(mili.getDate() - 5)
 const asd = mili.setDate(mili.getDate() + 4)
 const zxc = mili.setDate(mili.getDate() + 8)
 // const y
-const x_ = new Date(asd)
-console.log('date', x_)
+const x_ = new Date("2022-05-29T03:00:00.000Z")
+console.log('datex', x_-1000000)
+const xcv = x_-5400000
+console.log('datexcv', xcv)
+const bnm = new Date(xcv)
+console.log('datebnm',bnm)
+
 const y_ = new Date(zxc)
-console.log('date', y_)
+console.log('datey', y_)
 const z_ = new Date(qwe)
-console.log('date', z_)
+console.log('datez', z_)
 
 import InviteDB from "../models/inviteLinkDB";
 /////////////
@@ -44,18 +49,18 @@ const suggestSpecificTimeslot = (session) => {
         enterAL: session.enterAL,
         locationToMeet: "JE Mrt",
         timeslot: {
-            date: rounded,
-            day: session.timeslot.day,
-            timing: getHours.concat(adjustMins())
+            date: rounded,              //Date format
+            day: session.timeslot.day, //string
+            timing: getHours.concat(adjustMins()) //string
         }
     },
     {
         enterAL: session.enterAL,
         locationToMeet: "CCK Mrt",
         timeslot: {
-            date: rounded,
-            day: session.timeslot.day,
-            timing: getHours.concat(adjustMins())
+            date: rounded,                  //Date format
+            day: session.timeslot.day,      //string
+            timing: getHours.concat(adjustMins()) //string
         }
     }]
     return array

@@ -9,14 +9,56 @@ const User_1 = __importDefault(require("../models/User"));
 const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
 const router = express_1.default.Router();
 const invitedata_1 = require("../data/invitedata");
+//test
+const x_ = new Date("2022-05-29T03:00:00.000Z");
+console.log('datex', x_ - 5400000);
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
     try {
         await inviteLinkDB_1.default.deleteMany({});
-        // await InviteDB.create(
-        //   [
-        //   ]
-        // );
+        await inviteLinkDB_1.default.create([{
+                grpchatid: 427599753,
+                enterAL: false,
+                locationToMeet: "JE Mrt",
+                timeslot: { date: x_, day: "Fri", timing: 1530 },
+                invitedMembers: [
+                    {
+                        username: "tuxedo",
+                        isDriving: { exist: false, spareCapacity: null },
+                        timeInvited: y_ //{ type: Date },
+                        //Derived time to delete member invite if no news after 3mins
+                    },
+                    {
+                        username: "Coke",
+                        isDriving: { exist: false, spareCapacity: null },
+                        timeInvited: z_ //{ type: Date },
+                        //Derived time to delete member invite if no news after 3mins
+                    }
+                ],
+                capacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            },
+            {
+                grpchatid: 327592353,
+                enterAL: true,
+                locationToMeet: "CCK Mrt",
+                //username: { type: String, unique: true, required: true },
+                timeslot: { date: x_, day: "Fri", timing: 2030 },
+                invitedMembers: [
+                    {
+                        username: "sprite",
+                        isDriving: { exist: true, spareCapacity: 3 },
+                        timeInvited: y_ //{ type: Date },
+                        //Derived time to delete member invite if no news after 3mins
+                    }, {
+                        username: "honeylemon",
+                        isDriving: { exist: false, spareCapacity: null },
+                        timeInvited: z_ //{ type: Date },
+                        //Derived time to delete member invite if no news after 3mins
+                    }
+                ],
+                capacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            }
+        ]);
         res.send("Users Seed");
     }
     catch (error) {

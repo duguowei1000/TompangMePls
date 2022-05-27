@@ -7,6 +7,12 @@ console.log(date)
 // date.setHours(date.getHours() + 10);  //adds hours
 // console.log(x)
 console.log("day",date.getDay())
+const now_ = new Date
+now_.setDate(now_.getDate() +1)
+now_.getDay()
+console.log("now_",now_)
+console.log("now_",now_.getDay())
+
 console.log("hours",date.getHours())
 console.log("mins",date.getMinutes())
 console.log("getTime",date.getTime())
@@ -59,12 +65,27 @@ console.log('date',mili.getDay())
 
 //   console.log(roundToNearest30(new Date(2022, 1, 24, 6, 15)));
 
-
+//////REGEX 3 digits
 //   console.log("timewrote",timeWrote)
-  const digits = "122"
-  const re = new RegExp('^[0-9]{3}$')
-  if digits.match(re) {
-      const added = "0".concat(digits)
-      console.log(added)
+//   const digits = "122"
+//   const re = new RegExp('^[0-9]{3}$')
+//   if digits.match(re) {
+//       const added = "0".concat(digits)
+//       console.log(added)
     
-    }
+//     }
+
+
+
+///////////////// 1.5hrs
+// const x_ = new Date("2022-05-29T03:00:00.000Z")
+// console.log('datex', x_-1000000)
+// const xcv = x_-5400000
+// console.log('datexcv', xcv)
+// const bnm = new Date(xcv)
+// console.log('datebnm',bnm)
+
+// const y_ = new Date(zxc)
+// console.log('datey', y_)
+// const z_ = new Date(qwe)
+// console.log('datez', z_)
