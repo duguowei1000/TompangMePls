@@ -7,64 +7,76 @@ import { Router } from "@grammyjs/router";
 import { suggestSpecificTimeslot } from "../data/invitedata";
 
 //test
-const x_ = new Date("2022-05-29T03:00:00.000Z")
-console.log('datex', x_-5400000)
+// milliseconds since Jan 1, 1970, 00:00:00.000 GMT
+// const y
+const x_ = new Date("2022-05-30T03:00:00.000Z")
+console.log('datex', x_-1000000)
+const xcv = x_-5400000
+const qwe = x_-5000000
+const zxc = x_-4000000
+console.log('datexcv', xcv)
+const bnm = new Date(xcv)
+console.log('datebnm',bnm)
+
+const y_ = new Date(zxc)
+console.log('datey', y_)
+const z_ = new Date(qwe)
+console.log('datez', z_)
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
-  try {
-    await InviteDB.deleteMany({})
-    await InviteDB.create(
-      [{
-        grpchatid: 427599753,//[{ type: Number, unique: true }],
-        enterAL: false,//{type: Boolean},
-        locationToMeet: "JE Mrt",//{type: String},
-        timeslot: { date: x_, day: "Fri", timing: 1530 },//{ type: Date }, //, default: Date.now 
-        invitedMembers: [
-            {
-                username: "tuxedo",//{ type: String },
-                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-                timeInvited: y_//{ type: Date },
-                //Derived time to delete member invite if no news after 3mins
-            },
-            {
-                username: "Coke",//{ type: String },
-                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-                timeInvited: z_//{ type: Date },
-                //Derived time to delete member invite if no news after 3mins
-            }],
-        capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
-    },
+  const existingChats = [
     {
-        grpchatid: 327592353,//[{ type: Number, unique: true }],
-        enterAL: true,//{type: Boolean},
-        locationToMeet: "CCK Mrt",//{type: String},
-        //username: { type: String, unique: true, required: true },
-        timeslot: { date: x_, day: "Fri", timing: 2030 },//{ type: Date }, //, default: Date.now 
-        invitedMembers: [
-            {
-                username: "sprite",//{ type: String },
-                isDriving: { exist: true, spareCapacity: 3 },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-                timeInvited: y_//{ type: Date },
-                //Derived time to delete member invite if no news after 3mins
-            }, {
-                username: "honeylemon",//{ type: String },
-                isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-                timeInvited: z_//{ type: Date },
-                //Derived time to delete member invite if no news after 3mins
-            }
-    
-        ],
-        capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
-    }
+      grpchatid: 427599753,//[{ type: Number, unique: true }],
+      enterAL: false,//{type: Boolean},
+      locationToMeet: "JE mrt",//{type: String},
+      //username: { type: String, unique: true, required: true },
+      timeslot: {
+          date: x_-5000000,
+          day: "Mon",
+          timing: "1530"
+      },//{ type: Date }, //, default: Date.now 
+      invitedMembers: [
+          {
+              username: "tuxedo",//{ type: String },
+              isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+              timeInvited: z_//{ type: Date },
+              //Derived time to delete member invite if no news after 3mins
+          },
+          {
+              username: "Coke",//{ type: String },
+              isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+              timeInvited: x_//{ type: Date },
+              //Derived time to delete member invite if no news after 3mins
+          }],
+      capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+  },
+  {
+      grpchatid: 327592353,//[{ type: Number, unique: true }],
+      enterAL: true,//{type: Boolean},
+      locationToMeet: "CCK Mrt",//{type: String},
+      //username: { type: String, unique: true, required: true },
+      timeslot: { date: x_, day: "Tues", timing: "1230pm" },//{ type: Date }, //, default: Date.now 
+      invitedMembers: [
+          {
+              username: "sprite",//{ type: String },
+              isDriving: { exist: true, spareCapacity: 3 },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+              timeInvited: y_//{ type: Date },
+              //Derived time to delete member invite if no news after 3mins
+          }, {
+              username: "honeylemon",//{ type: String },
+              isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+              timeInvited: x_//{ type: Date },
+              //Derived time to delete member invite if no news after 3mins
+          }
 
-      ]
-
-
-    );
-    res.send("Users Seed")
-  } catch (error) {
-    console.log(error);
+      ],
+      capacity: 4//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
   }
+ 
+  ];
+  await InviteDB.deleteMany({});
+  await InviteDB.insertMany(existingChats);
+  res.json(existingChats);
 })
 
 //Criteria for suggestions : within 1.5 hrs of indicated time
@@ -118,7 +130,7 @@ const findUserChoice = async (session) => {
         {isDriving: { exist : false }},  //specifically looking for grps without driver
         { enterAL : enterAL },
         { timeslot: timeslot },
-        { locationToMeet: { locationToMeet: locationToMeet } }
+        { locationToMeet: locationToMeet } 
       ]
     })
     console.log("specificSlotAvailable",specificSlotAvailable_D)
@@ -134,7 +146,7 @@ const findUserChoice = async (session) => {
       $and: [
         { enterAL : enterAL },
         { timeslot: timeslot },
-        { locationToMeet: { locationToMeet: locationToMeet } }
+        { locationToMeet: locationToMeet } 
       ]
     })
     if (!specificSlotAvailable_ND) // no rooms that match, need create for next step**
