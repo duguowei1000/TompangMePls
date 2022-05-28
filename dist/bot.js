@@ -76,7 +76,6 @@ const calculateMenu = new menu_1.Menu("calculateMenu");
 calculateMenu
     .dynamic((ctx) => {
     const range = new menu_1.MenuRange();
-    console.log('>>>CalculatesuggestionsTimeslot', ctx.session.suggestionTimeslots);
     const suggestOutput = ctx.session.suggestionTimeslots;
     for (let i = 0; i < suggestOutput.length; i++) {
         const gotDriver = (i) => {
@@ -122,21 +121,26 @@ stepRouter.route("time", async (ctx) => {
         await ctx.reply(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm`, { parse_mode: "HTML" });
         return;
     }
+    const convertHrsMins = (timestring) => {
+        const wroteMins = String(timestring).slice(-2);
+        const wroteHrs = String(timestring).slice(0, 2);
+        const initialDate = new Date(ctx.session.timeslot.date); //update derived date from previous entry
+        initialDate.setHours(Number(wroteHrs)); //set RAW hours
+        initialDate.setMinutes(Number(wroteMins)); //set RAW mins
+        // console.log("initialdate-2x",initialDate)
+        ctx.session.timeslot.date = initialDate; // This is RAW input DATE by user
+    };
     const parseTime = timeWrote.toString();
     const re = new RegExp('^[0-9]{3}$'); //check 3 digits => add 0 to front
     if (parseTime.match(re)) {
         const added = "0".concat(parseTime);
         ctx.session.timeslot.timing = added;
-        console.log("added", added);
+        convertHrsMins(added);
     }
-    else
+    else {
         ctx.session.timeslot.timing = parseTime;
-    const wroteMins = String(timeWrote).slice(-2);
-    const wroteHrs = String(timeWrote).slice(0, 2);
-    const initialDate = new Date(ctx.session.timeslot.date); //update derived date from previous entry
-    initialDate.setHours(Number(wroteHrs)); //set RAW hours
-    initialDate.setMinutes(Number(wroteMins)); //set RAW mins
-    ctx.session.timeslot.date = initialDate; // This is RAW input DATE by user
+        convertHrsMins(timeWrote);
+    }
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
     ctx.session.suggestionTimeslots = await (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestion
@@ -167,6 +171,7 @@ days_menu
             ctx.session.timeslot = { date: convertToDay, day: arrays_1.default[convertToDay.getDay()] };
             ctx.menu.close();
             ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" });
+            console.log("ctx.session.timeslot.date", ctx.session.timeslot.date);
         })
             .row();
     }

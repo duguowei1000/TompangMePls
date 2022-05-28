@@ -23,13 +23,13 @@ const z_ = new Date(qwe);
 console.log('datez', z_);
 /////////////
 function roundToNearest30(date = new Date()) {
+    console.log("datehere", date);
     const minutes = 30;
     const ms = 1000 * 60 * minutes;
     // 👇️ replace Math.round with Math.ceil to always round UP
     return new Date(Math.round(date.getTime() / ms) * ms);
 }
 const suggestSpecificTimeslot = (session) => {
-    console.log("session", session);
     const rounded = roundToNearest30(session.timeslot.date);
     const getHours = String(rounded.getHours());
     const getMins = String(rounded.getMinutes());
