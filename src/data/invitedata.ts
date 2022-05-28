@@ -1,4 +1,4 @@
-
+import roundToNearest30 from "./timeFunctions";
 
 const trialDate = new Date
 trialDate.getDate()
@@ -24,47 +24,9 @@ console.log('datey', y_)
 const z_ = new Date(qwe)
 console.log('datez', z_)
 
-import InviteDB from "../models/inviteLinkDB";
 /////////////
-  function roundToNearest30(date = new Date()) {
-    console.log("datehere", date)
-    const minutes = 30;
-    const ms = 1000 * 60 * minutes;
-  
-    // 👇️ replace Math.round with Math.ceil to always round UP
-    return new Date(Math.round(date.getTime() / ms) * ms);
-  }
-const suggestSpecificTimeslot = (session) => {
-    const rounded = roundToNearest30(session.timeslot.date)
-    const getHours= String(rounded.getHours())
-    const getMins= String(rounded.getMinutes())
-    const adjustMins = () => {
-        if (getMins ==="0") {return "00"}else {return getMins} 
-    }
-    // console.log(">>>>rounded",rounded )
-    // console.log(">>>>getHours",getHours )
-    // console.log(">>>>getMins",getMins )
-    // console.log(">>>>hoursmins",getHours.concat(adjustMins()) )
-    const array = [{
-        enterAL: session.enterAL,
-        locationToMeet: "JE Mrt",
-        timeslot: {
-            date: rounded,              //Date format
-            day: session.timeslot.day, //string
-            timing: getHours.concat(adjustMins()) //string
-        }
-    },
-    {
-        enterAL: session.enterAL,
-        locationToMeet: "CCK Mrt",
-        timeslot: {
-            date: rounded,                  //Date format
-            day: session.timeslot.day,      //string
-            timing: getHours.concat(adjustMins()) //string
-        }
-    }]
-    return array
-}
+
+
 
 
 

@@ -67,13 +67,21 @@ console.log('date',mili.getDay())
 
 ////REGEX 3 digits
 //   console.log("timewrote",timeWrote)
-  const digits = "122"
-  const re = new RegExp('^[0-9]{3}$')
-  if digits.match(re) {
-      const added = "0".concat(digits)
-      console.log(added)
+//   const digits = "811"
+//   const re = new RegExp('^[0-9]{3}$')
+//   if digits.match(re) {
+//       const added = "0".concat(digits)
+//       console.log(added)
+
+//       const wroteMins = String(added).slice(-2)
+//       const wroteHrs = String(added).slice(0, 2)
+//       const initialDate = new Date(ctx.session.timeslot.date) //update derived date from previous entry
+//       initialDate.setHours(Number(wroteHrs));  //set RAW hours
+//       initialDate.setMinutes(Number(wroteMins)); //set RAW mins
     
-    }
+//     }
+
+
 
 
 
@@ -89,3 +97,13 @@ console.log('date',mili.getDay())
 // console.log('datey', y_)
 // const z_ = new Date(qwe)
 // console.log('datez', z_)
+
+const x_ = new Date("2022-05-30T14:00:00.000Z")
+console.log("time",x_.getTime()) 
+const checkTime= (ms:number)=>{return (x_.getTime()-5400000) && ms < (x_.getTime()+5400000) }
+console.log("timeslotinDate",x_)
+console.log("timeslotinDate-5400000",x_-5400000)
+// console.log("obj boolean",(checkTime(obj.timeslot.date)))
+// console.log("obj.timeslot.date.Gettime",(obj.timeslot.date.getTime()))
+
+console.log(checkTime(1653919200000-100))

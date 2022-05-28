@@ -15,7 +15,7 @@ const InviteDBSchema = new mongoose.Schema({
             timeInvited: { type: Date },
             //Derived time to delete member invite if no news after 3mins
         }],
-        capacity: {type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+        vacantCapacity: {type: Number} //vacantCapacity = Driver + spareCapacity //OR carpool (4pax)
     }
 
 );

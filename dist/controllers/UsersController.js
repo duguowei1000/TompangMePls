@@ -8,21 +8,18 @@ const express_1 = __importDefault(require("express"));
 const User_1 = __importDefault(require("../models/User"));
 const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
 const router = express_1.default.Router();
-const invitedata_1 = require("../data/invitedata");
+const timeFunctions_1 = __importDefault(require("../data/timeFunctions"));
 //test
 // milliseconds since Jan 1, 1970, 00:00:00.000 GMT
 // const y
-const x_ = new Date("2022-05-30T03:00:00.000Z");
+const x_ = new Date("2022-05-30T14:00:00.000Z");
 console.log('datex', x_ - 1000000);
 const xcv = x_ - 5400000;
 const qwe = x_ - 5000000;
 const zxc = x_ - 4000000;
-console.log('datexcv', xcv);
-const bnm = new Date(xcv);
-console.log('datebnm', bnm);
-const y_ = new Date(zxc);
+const y_ = x_ - 300000;
 console.log('datey', y_);
-const z_ = new Date(qwe);
+const z_ = x_ + 6000000;
 console.log('datez', z_);
 // const saltRounds = 10;
 router.get("/seed", async (req, res) => {
@@ -33,7 +30,7 @@ router.get("/seed", async (req, res) => {
             locationToMeet: "JE mrt",
             //username: { type: String, unique: true, required: true },
             timeslot: {
-                date: x_ - 5000000,
+                date: x_ - 1000000,
                 day: "Mon",
                 timing: "1530"
             },
@@ -51,7 +48,33 @@ router.get("/seed", async (req, res) => {
                     //Derived time to delete member invite if no news after 3mins
                 }
             ],
-            capacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            vacantCapacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+        },
+        {
+            grpchatid: 527599753,
+            enterAL: false,
+            locationToMeet: "JE mrt",
+            //username: { type: String, unique: true, required: true },
+            timeslot: {
+                date: x_ - 3000000,
+                day: "Mon",
+                timing: "1530"
+            },
+            invitedMembers: [
+                {
+                    username: "tuxedo",
+                    isDriving: { exist: false, spareCapacity: null },
+                    timeInvited: z_ //{ type: Date },
+                    //Derived time to delete member invite if no news after 3mins
+                },
+                {
+                    username: "Coke",
+                    isDriving: { exist: false, spareCapacity: null },
+                    timeInvited: x_ //{ type: Date },
+                    //Derived time to delete member invite if no news after 3mins
+                }
+            ],
+            vacantCapacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
         },
         {
             grpchatid: 327592353,
@@ -72,7 +95,7 @@ router.get("/seed", async (req, res) => {
                     //Derived time to delete member invite if no news after 3mins
                 }
             ],
-            capacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            vacantCapacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
         }
     ];
     await inviteLinkDB_1.default.deleteMany({});
@@ -81,50 +104,106 @@ router.get("/seed", async (req, res) => {
 });
 //Criteria for suggestions : within 1.5 hrs of indicated time
 const findSuggestions = async (session) => {
-    // console.log("sessionFindsuggestions", session)
+    console.log("sessionFindsuggestions", session);
     const enterAL = session.enterAL;
-    const timeslot = new Date(session.timeslot.date);
-    timeslot.getTime();
-    // console.log("getTimeFindsuggestions", timeslot)
+    const timeslotinDate = new Date(session.timeslot.date);
+    timeslotinDate.getTime();
+    console.log("getTimeFindsuggestionsfromtimeslot", timeslotinDate);
     //const locationToMeet = session.locationToMeet
     const isDriving = session.isDriving; //user is driver or not
     if (isDriving.exist) {
-        const slotAvailable_D = await inviteLinkDB_1.default.find({
-            $and: [
-                { isDriving: { exist: false } },
-                { enterAL: enterAL },
-                { timeslot: { $in: [timeslot - 5400000, timeslot + 5400000] } },
-            ]
+        const slotAvailable_D_EL = await inviteLinkDB_1.default.find({
+            enterAL: enterAL
         });
-        return slotAvailable_D;
+        const filteredTimeArray = [];
+        const finalFiltered = [];
+        //filter time
+        for (const obj of slotAvailable_D_EL) {
+            const checkTime = (ms) => { return (timeslotinDate.getTime() - 5400000) && ms < (timeslotinDate.getTime() + 5400000); };
+            // console.log("timeslotinDate",timeslotinDate)
+            // console.log("timeslotinDate-5400000",timeslotinDate-5400000)
+            // console.log("obj boolean",(checkTime(obj.timeslot.date)))
+            // console.log("obj.timeslot.date.Gettime",(obj.timeslot.date.getTime()))
+            if (checkTime(obj.timeslot.date.getTime())) {
+                filteredTimeArray.push(obj);
+            }
+        }
+        console.log("filteredTimeArray", filteredTimeArray);
+        //filter driver
+        for (const obj2 of filteredTimeArray) { //grps with no driver
+            if (obj2.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
+                finalFiltered.push(obj2);
+            }
+        }
+        console.log("finalFiltered", finalFiltered);
+        return finalFiltered;
     }
     else if (!isDriving.exist) {
         const slotAvailable_ND = await inviteLinkDB_1.default.find({
             $and: [
                 { enterAL: enterAL },
-                { timeslot: { $in: [timeslot - 5400000, timeslot + 5400000] } },
+                { timeslot: { date: { $in: [timeslotinDate - 5400000, timeslotinDate + 5400000] } } },
+                { vacantCapacity: { $gt: 0 } }
             ]
         });
+        console.log("slotAvailable_ND", slotAvailable_ND);
         return slotAvailable_ND;
     }
-    return;
 };
 exports.findSuggestions = findSuggestions;
+//If no timeslot match the derived timeslot
+const suggestSpecificTimeslot = (session) => {
+    const rounded = (0, timeFunctions_1.default)(session.timeslot.date);
+    const getHours = String(rounded.getHours());
+    const getMins = String(rounded.getMinutes());
+    const adjustMins = () => {
+        if (getMins === "0") {
+            return "00";
+        }
+        else {
+            return getMins;
+        }
+    };
+    // console.log(">>>>rounded",rounded )
+    // console.log(">>>>getHours",getHours )
+    // console.log(">>>>getMins",getMins )
+    // console.log(">>>>hoursmins",getHours.concat(adjustMins()) )
+    const array = [{
+            enterAL: session.enterAL,
+            locationToMeet: "JE Mrt",
+            timeslot: {
+                date: rounded,
+                day: session.timeslot.day,
+                timing: getHours.concat(adjustMins()) //string
+            }
+        },
+        {
+            enterAL: session.enterAL,
+            locationToMeet: "CCK Mrt",
+            timeslot: {
+                date: rounded,
+                day: session.timeslot.day,
+                timing: getHours.concat(adjustMins()) //string
+            }
+        }];
+    return array;
+};
 //Driver should not see another driver
 const findUserChoice = async (session) => {
-    console.log("session", session);
     const enterAL = session.enterAL;
-    const timeslot = session.timeslot;
     const locationToMeet = session.locationToMeet;
     const isDriving = session.isDriving; //user is driver or not
-    const suggestions = await findSuggestions(session); //get from database relaxed criterion <timeslot within 90mins>
+    const timeslot = session.timeslot.date;
+    const derivedTime = (0, timeFunctions_1.default)(timeslot);
+    console.log("derivedTime", derivedTime);
+    const suggestions = await findSuggestions(session); //Specifically timeslots existing in database relaxed criterion <timeslot within 90mins>
     console.log("suggestions", suggestions);
     if (isDriving.exist) {
         const specificSlotAvailable_D = await inviteLinkDB_1.default.findOne({
             $and: [
                 { isDriving: { exist: false } },
                 { enterAL: enterAL },
-                { timeslot: timeslot },
+                { timeslot: derivedTime },
                 { locationToMeet: locationToMeet }
             ]
         });
@@ -132,23 +211,23 @@ const findUserChoice = async (session) => {
         if (!specificSlotAvailable_D) // no rooms that match, need create for next step**
          {
             // console.log("suggested addtional",suggestSpecificTimeslot(session))
-            const suggestUserSpecificSlot = (0, invitedata_1.suggestSpecificTimeslot)(session);
-            return [...suggestions, ...suggestUserSpecificSlot];
+            const suggestUserSpecificSlot = suggestSpecificTimeslot(session);
+            return [...suggestions, ...suggestUserSpecificSlot]; //collate all suggestions
         }
     }
     else if (!isDriving.exist) {
         const specificSlotAvailable_ND = await inviteLinkDB_1.default.findOne({
             $and: [
                 { enterAL: enterAL },
-                { timeslot: timeslot },
+                { timeslot: derivedTime },
                 { locationToMeet: locationToMeet }
             ]
         });
         if (!specificSlotAvailable_ND) // no rooms that match, need create for next step**
          {
-            console.log("suggested addtional", (0, invitedata_1.suggestSpecificTimeslot)(session));
-            const suggestUserSpecificSlot = (0, invitedata_1.suggestSpecificTimeslot)(session);
-            return [...suggestions, ...suggestUserSpecificSlot];
+            // console.log("suggested addtional",suggestSpecificTimeslot(session))
+            const suggestUserSpecificSlot = suggestSpecificTimeslot(session);
+            return [...suggestions, ...suggestUserSpecificSlot]; //collate all suggestions
         }
     }
 };
