@@ -11,6 +11,7 @@ const router = express_1.default.Router();
 const timeFunctions_1 = __importDefault(require("../data/timeFunctions"));
 const arrays_1 = require("../data/arrays");
 const arrays_2 = __importDefault(require("../data/arrays"));
+const grplinks_1 = __importDefault(require("../grpdata/grplinks"));
 const dateConvert = (ms) => {
     return new Date(ms);
 };
@@ -227,7 +228,8 @@ const findUserChoice = async (session) => {
 exports.findUserChoice = findUserChoice;
 const saveUserChoice = async (ctxt, selectedSlot) => {
     const enterAL = selectedSlot.enterAL;
-    const timeslot = selectedSlot.timeslot;
+    const timeslot_ = selectedSlot.timeslot.date;
+    console.log("selectedSlot.timeslot.date", selectedSlot.timeslot.date);
     const locationToMeet = selectedSlot.locationToMeet;
     // const isDriving = selectedSlot.isDriving
     const userIsDriver = ctxt.session.isDriving;
@@ -248,62 +250,94 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
             const timeDate = user.timeslot.date.getDate(); //await User.findOne({ timeslot: time });
             const timeMth = user.timeslot.date.getMonth();
             const timeDay = user.timeslot.date.getDay();
-            const timeSlot = user.timeslot.timing;
+            const timeTiming = user.timeslot.timing;
             const inviteLink = user.invitelink;
-            console.log(`userName${userName} && userDest${userlocationToMeet} && time ${timeSlot} ${inviteLink} , please press /start to update`);
+            console.log(`userName${userName} && userDest${userlocationToMeet} && time ${timeTiming} ${inviteLink} , please press /start to update`);
             // await ctxt.reply("hi")
-            await ctxt.reply(`You already chose ${timeDate} ${arrays_1.monthsArray[timeMth]}${arrays_2.default[timeDay]} ${timeSlot}hrs with this invite link ${inviteLink}, please press /start to update`);
+            await ctxt.reply(`You already chose ${timeDate} ${arrays_1.monthsArray[timeMth]}${arrays_2.default[timeDay]} ${timeTiming}hrs with this invite link ${inviteLink}, please press /start to update`);
         }
-        else if (!user) {
-            //const timeNow3mins = Date.now() +180000
-            // console.log(timeNow3mins)
+        else if (!user) { //ADD SLOT OR UPDATE SLOT
+            const timeNow3mins = new Date(Date.now() + 180000);
             //Add new slot
-            const addTimeslot = {
-                grpchatid: -705354562,
-                enterAL: enterAL,
-                locationToMeet: locationToMeet,
-                timeslot: timeslot,
-                invitedMembers: [
-                    {
-                        username: ctxt.session.username,
-                        isDriving: ctxt.session.isDriving,
-                        timeInvited: Date.now(),
-                        timeToExpire: Date.now() + 180000 //+ 3mins
-                        //Derived time to delete member invite if no news after 3mins
+            const existingSlotArray = [];
+            const findExisting = async () => {
+                if (userIsDriver) { //driver
+                    const findExistingSLot = await inviteLinkDB_1.default.find({
+                        $and: [
+                            { enterAL: enterAL },
+                            { vacantCapacity: { $gt: 0 } }
+                        ]
+                    });
+                    for (const obj3 of findExistingSLot) { //grps with no driver
+                        if (obj3.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
+                            existingSlotArray.push(obj3);
+                        }
                     }
-                ],
-                inviteLink: "https://t.me/+bRjtUKOXVtVhZjM1",
-                vacantCapacity: totalCapacity(), //toupdate constantly at group side
+                    return existingSlotArray.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)); });
+                }
+                else if (!userIsDriver) {
+                    const findExistingSLot = await inviteLinkDB_1.default.find({
+                        $and: [
+                            { enterAL: enterAL },
+                            { vacantCapacity: { $gt: 0 } }
+                        ]
+                    });
+                    existingSlotArray.push(findExistingSLot);
+                    return findExistingSLot.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)); });
+                }
             };
-            const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
-            console.log("created New entry to DB", createdTimeslot);
+            console.log("findExisting()", await findExisting());
+            if (await findExisting()) {
+                console.log("existingSlotArray", existingSlotArray);
+            }
+            else {
+                const addTimeslot = {
+                    grpchatid: -705354562,
+                    enterAL: enterAL,
+                    locationToMeet: locationToMeet,
+                    timeslot: { date: timeslot_, day: arrays_2.default[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },
+                    invitedMembers: [
+                        {
+                            username: ctxt.session.username,
+                            isDriving: ctxt.session.isDriving,
+                            timeInvited: Date.now(),
+                            timeToExpire: timeNow3mins //+ 3mins
+                            //Derived time to delete member invite if no news after 3mins
+                        }
+                    ],
+                    vacantCapacity: totalCapacity(),
+                    invitelink: grplinks_1.default[0], //search for empty slot
+                };
+                const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
+                console.log("created New entry to DB", createdTimeslot);
+            }
+            // }
             //Update existing slot
-            console.log("hi");
             // return 'hi' 
+            // else if (!specificSlot) {         //create that specific timeslot for the user if no existing
+            // const totalCapacity = () => {
+            //   if (userIsDriver) return userIsDriver.spareCapacity
+            //   else return user.
+            // }//OR carpool (4pax)
+            // const updateMemberToTimeslot = {
+            //   grpchatid: `grpchatid from chats`,//[{ type: Number, unique: true }],
+            //   enterAL: enterAL,//{type: Boolean},
+            //   locationToMeet: locationToMeet,//{type: String},
+            //   timeslot: timeslot,//{ type: Date }, //, default: Date.now 
+            //   invitedMembers: [
+            //     {
+            //       username: `${ctxt.chat.username}`,//{ type: String },
+            //       isDriving: false,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+            //       timeInvited: Date.now(),//{ type: Date },
+            //       timeToExpire: Date.now() //+ 3mins
+            //       //Derived time to delete member invite if no news after 3mins
+            //     }],
+            //     vacantCapacity: totalCapacity()//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            //     inviteLink: inviteLink
+            // }
+            // const createdTimeslot = await InviteDB.create(updateMemberToTimeslot);
+            // console.log("created New entry to DB", createdTimeslot)
         }
-        // else if (!specificSlot) {         //create that specific timeslot for the user if no existing
-        // const totalCapacity = () => {
-        //   if (userIsDriver) return userIsDriver.spareCapacity
-        //   else return user.
-        // }//OR carpool (4pax)
-        // const updateMemberToTimeslot = {
-        //   grpchatid: `grpchatid from chats`,//[{ type: Number, unique: true }],
-        //   enterAL: enterAL,//{type: Boolean},
-        //   locationToMeet: locationToMeet,//{type: String},
-        //   timeslot: timeslot,//{ type: Date }, //, default: Date.now 
-        //   invitedMembers: [
-        //     {
-        //       username: `${ctxt.chat.username}`,//{ type: String },
-        //       isDriving: false,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-        //       timeInvited: Date.now(),//{ type: Date },
-        //       timeToExpire: Date.now() //+ 3mins
-        //       //Derived time to delete member invite if no news after 3mins
-        //     }],
-        //     vacantCapacity: totalCapacity()//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
-        //     inviteLink: inviteLink
-        // }
-        // const createdTimeslot = await InviteDB.create(updateMemberToTimeslot);
-        // console.log("created New entry to DB", createdTimeslot)
     }
     catch (error) {
         console.log("try error");

@@ -4,6 +4,7 @@ const InviteDBSchema = new mongoose.Schema({
     
  
         grpchatid: { type: Number},
+        
         enterAL: {type: Boolean},
         locationToMeet: {type: String},
         //username: { type: String, unique: true, required: true },
@@ -13,10 +14,11 @@ const InviteDBSchema = new mongoose.Schema({
             username: { type: String },
             isDriving:{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
             timeInvited: { type: Date },
+            timeToExpire: { type: Date },
             //Derived time to delete member invite if no news after 3mins
         }],
         vacantCapacity: {type: Number}, //vacantCapacity = Driver + spareCapacity //OR carpool (4pax)
-        invitelink: {type: String}
+        invitelink: {type: String},
     }
 
 );
