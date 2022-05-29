@@ -5,7 +5,7 @@ import { Menu, MenuRange, } from "@grammyjs/menu";
 import { Router } from "@grammyjs/router";
 import { saveUserChoice, findUserChoice } from "./controllers/UsersController";
 import { dishes } from "./dish";
-import scheduleDatabase from "./data/time";
+import scheduleDatabase from "./data/timeFunctions";
 import integerToDay, {monthsArray} from "./data/arrays";
 import { suggestions } from "./data/invitedata";
 import { time } from "console";
@@ -80,9 +80,12 @@ calculateMenu
             const gotDriver = (i: number) => {
                 const checkDriver = suggestOutput[i]?.invitedMembers //optional chaining for specific timeslots
                 if (checkDriver === undefined) return "No Driver"
-                for (const element of checkDriver) {
-                    if (element.isDriving.exist) { return "Incl. Driver" } else return "No Driver"
-                }
+                if(checkDriver.some((el)=>  {
+                    return (el.isDriving.exist===true)
+                })) { return "Incl. Driver" } 
+                else 
+                return "No Driver"
+                
             }
             if(!suggestOutput[i].enterAL){//Output for leaving AL
                 range.text( 
@@ -149,6 +152,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.step = "calculate";
     ctx.session.suggestionTimeslots = await findUserChoice(ctx.session)   //find if it is amongst existing DB, else to add to suggestion
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots)
+    console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots[0].invitedMembers)
     await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${monthsArray[ctx.session.timeslot.date.getMonth()]} ${integerToDay[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
     `, { reply_markup: calculateMenu , parse_mode: "HTML" });
 })

@@ -53,28 +53,28 @@ router.get("/seed", async (req, res) => {
         {
             grpchatid: 527599753,
             enterAL: false,
-            locationToMeet: "JE mrt",
+            locationToMeet: "CCK mrt",
             //username: { type: String, unique: true, required: true },
             timeslot: {
-                date: x_ - 3000000,
+                date: x_ - 1000000,
                 day: "Mon",
                 timing: "1530"
             },
             invitedMembers: [
                 {
-                    username: "tuxedo",
+                    username: "sketches",
                     isDriving: { exist: false, spareCapacity: null },
                     timeInvited: z_ //{ type: Date },
                     //Derived time to delete member invite if no news after 3mins
                 },
                 {
-                    username: "Coke",
-                    isDriving: { exist: false, spareCapacity: null },
+                    username: "berry",
+                    isDriving: { exist: true, spareCapacity: 3 },
                     timeInvited: x_ //{ type: Date },
                     //Derived time to delete member invite if no news after 3mins
                 }
             ],
-            vacantCapacity: 4 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+            vacantCapacity: 2 //{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
         },
         {
             grpchatid: 327592353,
@@ -111,15 +111,20 @@ const findSuggestions = async (session) => {
     console.log("getTimeFindsuggestionsfromtimeslot", timeslotinDate);
     //const locationToMeet = session.locationToMeet
     const isDriving = session.isDriving; //user is driver or not
+    const checkTime = (ms) => { return (timeslotinDate.getTime() - 5400000) && ms < (timeslotinDate.getTime() + 5400000); };
+    const filteredTimeArray = [];
+    console.log("filteredTimeArray", filteredTimeArray);
+    const finalFiltered = [];
+    console.log("finalFiltered", finalFiltered);
     if (isDriving.exist) {
         const slotAvailable_D_EL = await inviteLinkDB_1.default.find({
-            enterAL: enterAL
+            $and: [
+                { enterAL: enterAL },
+                { vacantCapacity: { $gt: 0 } }
+            ]
         });
-        const filteredTimeArray = [];
-        const finalFiltered = [];
         //filter time
         for (const obj of slotAvailable_D_EL) {
-            const checkTime = (ms) => { return (timeslotinDate.getTime() - 5400000) && ms < (timeslotinDate.getTime() + 5400000); };
             // console.log("timeslotinDate",timeslotinDate)
             // console.log("timeslotinDate-5400000",timeslotinDate-5400000)
             // console.log("obj boolean",(checkTime(obj.timeslot.date)))
@@ -142,12 +147,21 @@ const findSuggestions = async (session) => {
         const slotAvailable_ND = await inviteLinkDB_1.default.find({
             $and: [
                 { enterAL: enterAL },
-                { timeslot: { date: { $in: [timeslotinDate - 5400000, timeslotinDate + 5400000] } } },
                 { vacantCapacity: { $gt: 0 } }
             ]
         });
-        console.log("slotAvailable_ND", slotAvailable_ND);
-        return slotAvailable_ND;
+        //filter time
+        for (const obj of slotAvailable_ND) {
+            // console.log("timeslotinDate",timeslotinDate)
+            // console.log("timeslotinDate-5400000",timeslotinDate-5400000)
+            // console.log("obj boolean",(checkTime(obj.timeslot.date)))
+            // console.log("obj.timeslot.date.Gettime",(obj.timeslot.date.getTime()))
+            if (checkTime(obj.timeslot.date.getTime())) {
+                finalFiltered.push(obj);
+            }
+        }
+        console.log("finalFilterednodriverHere", finalFiltered);
+        return finalFiltered;
     }
 };
 exports.findSuggestions = findSuggestions;

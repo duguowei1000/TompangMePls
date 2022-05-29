@@ -82,13 +82,13 @@ calculateMenu
             const checkDriver = suggestOutput[i]?.invitedMembers; //optional chaining for specific timeslots
             if (checkDriver === undefined)
                 return "No Driver";
-            for (const element of checkDriver) {
-                if (element.isDriving.exist) {
-                    return "Incl. Driver";
-                }
-                else
-                    return "No Driver";
+            if (checkDriver.some((el) => {
+                return (el.isDriving.exist === true);
+            })) {
+                return "Incl. Driver";
             }
+            else
+                return "No Driver";
         };
         if (!suggestOutput[i].enterAL) { //Output for leaving AL
             range.text(`${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} drop@${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => { (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); }).row(); //output invitelink
@@ -145,6 +145,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.step = "calculate";
     ctx.session.suggestionTimeslots = await (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestion
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots);
+    console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots[0].invitedMembers);
     await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${arrays_1.monthsArray[ctx.session.timeslot.date.getMonth()]} ${arrays_1.default[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
     `, { reply_markup: calculateMenu, parse_mode: "HTML" });
 });
