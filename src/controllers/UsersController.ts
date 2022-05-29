@@ -116,8 +116,6 @@ router.get("/seed", async (req, res) => {
 
 //Criteria for suggestions : within 1.5 hrs of indicated time
 const findLaxSuggestions = async (session) => {
-
-  console.log("sessionFindsuggestions", session)
   const enterAL = session.enterAL
   const timeslotinDate: any = new Date(session.timeslot.date)
   timeslotinDate.getTime()
@@ -128,9 +126,8 @@ const findLaxSuggestions = async (session) => {
   const checkTime = (ms: number) => { return (timeslotinDate.getTime() - 5400000) && ms < (timeslotinDate.getTime() + 5400000) }
 
   const filteredTimeArray = []
-  console.log("filteredTimeArray", filteredTimeArray)
   const finalFiltered: any = []
-  console.log("finalFiltered", finalFiltered)
+
   if (isDriving.exist) {
     const slotAvailable_D_EL: any = await InviteDB.find({ //all possible choices within the criterion
       $and: [
@@ -148,7 +145,6 @@ const findLaxSuggestions = async (session) => {
         filteredTimeArray.push(obj)
       }
     }
-    console.log("filteredTimeArray", filteredTimeArray)
     //filter driver
     for (const obj2 of filteredTimeArray) {        //grps with no driver
       if (obj2.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
@@ -176,9 +172,6 @@ const findLaxSuggestions = async (session) => {
 
   }
 }
-
-
-
 
 //If no timeslot match the derived timeslot
 const suggestSpecificTimeslot = (session) => {
