@@ -31,7 +31,7 @@ const getRounded24HrsString = (date) => {
 };
 exports.getRounded24HrsString = getRounded24HrsString;
 ///INPUT time to test for database
-const x_ = new Date("2022-05-30T14:00:00.000Z");
+const x_ = new Date("2022-06-01T14:00:00.000Z");
 console.log('datex', x_ - 1000000);
 const xcv = x_ - 5400000;
 const qwe = x_ - 5000000;
@@ -50,12 +50,12 @@ router.get("/seed", async (req, res) => {
             //username: { type: String, unique: true, required: true },
             timeslot: {
                 date: x_ - 2000000,
-                day: "Mon",
+                day: arrays_2.default[dateConvert(x_ - 2000000).getDay()],
                 timing: getRounded24HrsString(dateConvert(x_ - 2000000))
             },
             invitedMembers: [
                 {
-                    username: "mrdgw",
+                    username: "cloud",
                     isDriving: { exist: false, spareCapacity: null },
                     timeInvited: z_ //{ type: Date },
                     //Derived time to delete member invite if no news after 3mins
@@ -77,7 +77,7 @@ router.get("/seed", async (req, res) => {
             //username: { type: String, unique: true, required: true },
             timeslot: {
                 date: x_ - 1000000,
-                day: "Mon",
+                day: arrays_2.default[dateConvert(x_ - 1000000).getDay()],
                 timing: getRounded24HrsString(dateConvert(x_ - 1000000))
             },
             invitedMembers: [
@@ -102,7 +102,11 @@ router.get("/seed", async (req, res) => {
             enterAL: true,
             locationToMeet: "CCK Mrt",
             //username: { type: String, unique: true, required: true },
-            timeslot: { date: x_, day: "Tues", timing: "1230pm" },
+            timeslot: {
+                date: x_,
+                day: arrays_2.default[dateConvert(x_).getDay()],
+                timing: getRounded24HrsString(dateConvert(x_))
+            },
             invitedMembers: [
                 {
                     username: "sprite",
@@ -258,59 +262,86 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
         }
         else if (!user) { //ADD SLOT OR UPDATE SLOT
             const timeNow3mins = new Date(Date.now() + 180000);
+            // console.log("timeslot_",ISODate(timeslot_))
             //Add new slot
-            const existingSlotArray = [];
-            const findExisting = async () => {
-                if (userIsDriver) { //driver
-                    const findExistingSLot = await inviteLinkDB_1.default.find({
-                        $and: [
-                            { enterAL: enterAL },
-                            { vacantCapacity: { $gt: 0 } }
-                        ]
-                    });
-                    for (const obj3 of findExistingSLot) { //grps with no driver
-                        if (obj3.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
-                            existingSlotArray.push(obj3);
-                        }
+            let date_ = new Date(timeslot_);
+            date_.setDate(date_.getUTCDate()); // Setting utc date, Only useful if you're region is behind UTC
+            date_ = new Date(date_.setHours(23, 59, 59, 999)); // This overrides hours generated with 23:59:59 - which is what exactly needed here.
+            // const findExistingSLot = await InviteDB.find({
+            //   timeslot:{
+            //     date : { $lte: date_}
+            //   // $filter: {
+            //   //   input: "$days", // le tableau à limiter 
+            //   //   as: "index", // un alias
+            //   //   cond: {$and: [
+            //   //     { $gte: [ "$$index.day", new Date("2020-12-29T00:00:00.000Z") ] },
+            //   //     { $lte: [ "$$index.day", new Date("2020-12-31T00:00:00.000Z") ] }
+            //   //   ]}
+            //   // }
+            //   // $and: [
+            //   //   { enterAL: enterAL },
+            //   //   { vacantCapacity: { $gt: 0 } },
+            //   //   {timeslot:{date: {$eq: new Date(timeslot_)} }}
+            //   // ]
+            // })
+            const findExistingSLot = await inviteLinkDB_1.default.find({ $and: [
+                    { enterAL: enterAL },
+                    { locationToMeet: locationToMeet },
+                    { vacantCapacity: { $gt: 0 } },
+                    { $match: { _id: 0, timeslot: { date: new Date(timeslot_) } } }
+                ]
+            });
+            console.log("findExistingSLot", findExistingSLot);
+            // const existingSlotArray = []
+            // const findExisting = async () => {
+            //   if (userIsDriver) { //driver
+            //     const findExistingSLot = await InviteDB.find({
+            //       $and: [
+            //         { enterAL: enterAL },
+            //         { vacantCapacity: { $gt: 0 } },
+            //         {timeslot:{date: {$eq: new Date(timeDate)} }}
+            //       ]
+            //     })
+            //     for (const obj3 of findExistingSLot) {        //grps with no driver
+            //       if (obj3.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
+            //         existingSlotArray.push(obj3)
+            //       }
+            //     }
+            //     return existingSlotArray.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)) })
+            //   } else if (!userIsDriver) {
+            //     const findExistingSLot = await InviteDB.find({
+            //       $and: [
+            //         { enterAL: enterAL },
+            //         { vacantCapacity: { $gt: 0 } }]
+            //     })
+            //     existingSlotArray.push(findExistingSLot)
+            //     return findExistingSLot.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)) })
+            //   }
+            // }
+            // console.log("findExisting()",await findExisting())
+            // if (await findExisting()) {
+            //   console.log("existingSlotArray", existingSlotArray)
+            // }else {
+            const addTimeslot = {
+                grpchatid: -705354562,
+                enterAL: enterAL,
+                locationToMeet: locationToMeet,
+                timeslot: { date: new Date(timeslot_), day: arrays_2.default[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },
+                invitedMembers: [
+                    {
+                        username: ctxt.session.username,
+                        isDriving: ctxt.session.isDriving,
+                        timeInvited: Date.now(),
+                        timeToExpire: timeNow3mins //+ 3mins
+                        //Derived time to delete member invite if no news after 3mins
                     }
-                    return existingSlotArray.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)); });
-                }
-                else if (!userIsDriver) {
-                    const findExistingSLot = await inviteLinkDB_1.default.find({
-                        $and: [
-                            { enterAL: enterAL },
-                            { vacantCapacity: { $gt: 0 } }
-                        ]
-                    });
-                    existingSlotArray.push(findExistingSLot);
-                    return findExistingSLot.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)); });
-                }
+                ],
+                vacantCapacity: totalCapacity(),
+                invitelink: grplinks_1.default[0], //search for empty slot
             };
-            console.log("findExisting()", await findExisting());
-            if (await findExisting()) {
-                console.log("existingSlotArray", existingSlotArray);
-            }
-            else {
-                const addTimeslot = {
-                    grpchatid: -705354562,
-                    enterAL: enterAL,
-                    locationToMeet: locationToMeet,
-                    timeslot: { date: timeslot_, day: arrays_2.default[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },
-                    invitedMembers: [
-                        {
-                            username: ctxt.session.username,
-                            isDriving: ctxt.session.isDriving,
-                            timeInvited: Date.now(),
-                            timeToExpire: timeNow3mins //+ 3mins
-                            //Derived time to delete member invite if no news after 3mins
-                        }
-                    ],
-                    vacantCapacity: totalCapacity(),
-                    invitelink: grplinks_1.default[0], //search for empty slot
-                };
-                const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
-                console.log("created New entry to DB", createdTimeslot);
-            }
+            const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
+            console.log("created New entry to DB", createdTimeslot);
+            //}
             // }
             //Update existing slot
             // return 'hi' 
@@ -424,3 +455,13 @@ exports.default = router;
 //     res.send("logout")
 //   })
 // module.exports = router;
+// days: {
+//   $filter: {
+//     input: "$days", // le tableau à limiter 
+//     as: "index", // un alias
+//     cond: {$and: [
+//       { $gte: [ "$$index.day", new Date("2020-12-29T00:00:00.000Z") ] },
+//       { $lte: [ "$$index.day", new Date("2020-12-31T00:00:00.000Z") ] }
+//     ]}
+//   }
+// }
