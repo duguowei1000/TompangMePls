@@ -94,9 +94,9 @@ router.get("/seed", async (req, res) => {
       enterAL: true,//{type: Boolean},
       locationToMeet: "CCK Mrt",//{type: String},
       //username: { type: String, unique: true, required: true },
-      timeslot: { 
-        date: x_, 
-        day: integerToDay[dateConvert(x_).getDay()], 
+      timeslot: {
+        date: x_,
+        day: integerToDay[dateConvert(x_).getDay()],
         timing: getRounded24HrsString(dateConvert(x_))
       },//{ type: Date }, //, default: Date.now 
       invitedMembers: [
@@ -233,10 +233,19 @@ const findUserChoice = async (session) => {
 
 }
 
+const totalCapacity = (isDrive) => {
+  if (isDrive) return isDrive.spareCapacity //OR Driver capacity
+  else return (4 - 1)   //4 carpoolers - the user
+}
+const updateCapacity = (isDrive,totalmembers) =>{
+  if (isDrive) return  isDrive.spareCapacity - (totalmembers - 1) //Sparecap - members exclude driver
+  else if(!isDrive){ return (totalmembers - 1) }
+}
+
 const saveUserChoice = async (ctxt, selectedSlot) => {
   const enterAL = selectedSlot.enterAL
   const timeslot_: Date = selectedSlot.timeslot.date
-  console.log("selectedSlot.timeslot.date",selectedSlot.timeslot.date)
+  console.log("selectedSlot.timeslot.date", selectedSlot.timeslot.date)
   const locationToMeet = selectedSlot.locationToMeet
   // const isDriving = selectedSlot.isDriving
   const userIsDriver = ctxt.session.isDriving
@@ -245,10 +254,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
 
   try {
     const user = await InviteDB.findOne({ invitedMembers: { $elemMatch: { username: ctxt.chat.username } } });
-    const totalCapacity = () => {
-      if (userIsDriver) return userIsDriver.spareCapacity //OR Driver capacity
-      else return (4 - 1)   //4 carpoolers - the user
-    }
+
 
     if (user) {   ///should not happen.
       console.log("user", user)
@@ -266,81 +272,70 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
     } else if (!user) { //ADD SLOT OR UPDATE SLOT
 
       const timeNow3mins = new Date(Date.now() + 180000)
-      // console.log("timeslot_",ISODate(timeslot_))
-      //Add new slot
-      let date_ = new Date(timeslot_)
-      date_.setDate(date_.getUTCDate()); // Setting utc date, Only useful if you're region is behind UTC
-      date_ = new Date(date_.setHours(23,59,59,999)) // This overrides hours generated with 23:59:59 - which is what exactly needed here.
 
-      // const findExistingSLot = await InviteDB.find({
+      const findExistingSlot_final = []
 
-      //   timeslot:{
-      //     date : { $lte: date_}
-      //   // $filter: {
-      //   //   input: "$days", // le tableau à limiter 
-      //   //   as: "index", // un alias
-      //   //   cond: {$and: [
-      //   //     { $gte: [ "$$index.day", new Date("2020-12-29T00:00:00.000Z") ] },
-      //   //     { $lte: [ "$$index.day", new Date("2020-12-31T00:00:00.000Z") ] }
-      //   //   ]}
-      //   // }
-      //   // $and: [
-      //   //   { enterAL: enterAL },
-      //   //   { vacantCapacity: { $gt: 0 } },
-      //   //   {timeslot:{date: {$eq: new Date(timeslot_)} }}
-      //   // ]
-      // })
+      const findExistingSlot = await InviteDB.find(
+        {
+          $and: [
 
-      const findExistingSLot = await InviteDB.find(
-          {$and: [
-           
             { enterAL: enterAL },
-            {locationToMeet: locationToMeet},
+            { locationToMeet: locationToMeet },
             { vacantCapacity: { $gt: 0 } },
-            {$match: {_id: 0,timeslot: { date: new Date(timeslot_) }}}]
+            { $match: { _id: 0, timeslot: { date: new Date(timeslot_) } } },
+          ]
+        }
+      )
+
+      const findExisting = () =>{
+        if (userIsDriver) {
+          for (const obj4 of findExistingSlot) {        //grps with no driver
+            if (obj4.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
+              findExistingSlot_final.push(obj4)
+            }
+            return findExistingSlot_final
           }
-        
-     )
-      console.log("findExistingSLot",findExistingSLot)
-      // const existingSlotArray = []
-      // const findExisting = async () => {
-        
-      //   if (userIsDriver) { //driver
-      //     const findExistingSLot = await InviteDB.find({
-      //       $and: [
-      //         { enterAL: enterAL },
-      //         { vacantCapacity: { $gt: 0 } },
-      //         {timeslot:{date: {$eq: new Date(timeDate)} }}
-      //       ]
-      //     })
-      //     for (const obj3 of findExistingSLot) {        //grps with no driver
-      //       if (obj3.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
-      //         existingSlotArray.push(obj3)
-      //       }
-      //     }
-      //     return existingSlotArray.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)) })
+        }else return findExistingSlot
 
-      //   } else if (!userIsDriver) {
-      //     const findExistingSLot = await InviteDB.find({
-      //       $and: [
-      //         { enterAL: enterAL },
-      //         { vacantCapacity: { $gt: 0 } }]
-      //     })
-      //     existingSlotArray.push(findExistingSLot)
-      //     return findExistingSLot.some((ti) => { return ((ti.timeslot.date.getTime() === timeslot_)) })
-      //   }
-      // }
+      }
+      
+      const openSlotToUpdate = findExisting()
 
-      // console.log("findExisting()",await findExisting())
-      // if (await findExisting()) {
-      //   console.log("existingSlotArray", existingSlotArray)
-      // }else {
+      console.log("findWithDrivers", openSlotToUpdate)
+
+      if (openSlotToUpdate?.length) {       //find slot chosen. If Found, update to existing grp //else create this slot in database
+
+        console.log(openSlotToUpdate.length)
+        console.log("openSlotToUpdate", openSlotToUpdate)
+        const {_id, grpchatid , invitedMembers} = openSlotToUpdate[0]
+        console.log("_id",_id)
+        const totalmembers = invitedMembers.length
+        console.log("totalmembers",totalmembers)
+         const updateData = {
+          username: ctxt.session.username,//{ type: String },
+          isDriving: ctxt.session.isDriving,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+          timeInvited: Date.now(),//{ type: Date },
+          timeToExpire: timeNow3mins //+ 3mins
+          //Derived time to delete member invite if no news after 3mins
+        }
+        console.log("updateData",updateData)
+         const updateMember = await InviteDB.findByIdAndUpdate(
+           {_id: _id}, { vacantCapacity: updateCapacity(userIsDriver,totalmembers)} 
+         )
+        //  {$addToSet: {invitedMembers: updateData }},
+
+          console.log("updateMemberadded",updateMember)
+
+
+      } else {             //else create this slot in database
+
+        console.log("totalCapacity(userIsDriver)",totalCapacity(userIsDriver))
         const addTimeslot = {
           grpchatid: -705354562,// search for empty rooms
-  
+
           enterAL: enterAL,//{type: Boolean},
           locationToMeet: locationToMeet,//{type: String},
-          timeslot: {date: new Date(timeslot_) ,day:integerToDay[timeslot_.getDay()] , timing: getRounded24HrsString(dateConvert(timeslot_)) },//{ type: Date }, //, default: Date.now 
+          timeslot: { date: new Date(timeslot_), day: integerToDay[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },//{ type: Date }, //, default: Date.now 
           invitedMembers: [
             {
               username: ctxt.session.username,//{ type: String },
@@ -349,56 +344,56 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
               timeToExpire: timeNow3mins //+ 3mins
               //Derived time to delete member invite if no news after 3mins
             }],
-          vacantCapacity: totalCapacity(), //toupdate constantly at group side
+          vacantCapacity: totalCapacity(userIsDriver), //toupdate constantly at group side
           invitelink: links[0],  //search for empty slot
-  
-  
+
+
         }
         const createdTimeslot = await InviteDB.create(addTimeslot);
         console.log("created New entry to DB", createdTimeslot)
 
 
-      //}
+      }
 
 
 
 
 
-    // }
-    //Update existing slot
-    // return 'hi' 
+      // }
+      //Update existing slot
+      // return 'hi' 
 
-    // else if (!specificSlot) {         //create that specific timeslot for the user if no existing
-    // const totalCapacity = () => {
-    //   if (userIsDriver) return userIsDriver.spareCapacity
-    //   else return user.
-    // }//OR carpool (4pax)
+      // else if (!specificSlot) {         //create that specific timeslot for the user if no existing
+      // const totalCapacity = () => {
+      //   if (userIsDriver) return userIsDriver.spareCapacity
+      //   else return user.
+      // }//OR carpool (4pax)
 
-    // const updateMemberToTimeslot = {
-    //   grpchatid: `grpchatid from chats`,//[{ type: Number, unique: true }],
-    //   enterAL: enterAL,//{type: Boolean},
-    //   locationToMeet: locationToMeet,//{type: String},
-    //   timeslot: timeslot,//{ type: Date }, //, default: Date.now 
-    //   invitedMembers: [
-    //     {
-    //       username: `${ctxt.chat.username}`,//{ type: String },
-    //       isDriving: false,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-    //       timeInvited: Date.now(),//{ type: Date },
-    //       timeToExpire: Date.now() //+ 3mins
-    //       //Derived time to delete member invite if no news after 3mins
-    //     }],
-    //     vacantCapacity: totalCapacity()//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
-    //     inviteLink: inviteLink
-    // }
+      // const updateMemberToTimeslot = {
+      //   grpchatid: `grpchatid from chats`,//[{ type: Number, unique: true }],
+      //   enterAL: enterAL,//{type: Boolean},
+      //   locationToMeet: locationToMeet,//{type: String},
+      //   timeslot: timeslot,//{ type: Date }, //, default: Date.now 
+      //   invitedMembers: [
+      //     {
+      //       username: `${ctxt.chat.username}`,//{ type: String },
+      //       isDriving: false,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+      //       timeInvited: Date.now(),//{ type: Date },
+      //       timeToExpire: Date.now() //+ 3mins
+      //       //Derived time to delete member invite if no news after 3mins
+      //     }],
+      //     vacantCapacity: totalCapacity()//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+      //     inviteLink: inviteLink
+      // }
 
-    // const createdTimeslot = await InviteDB.create(updateMemberToTimeslot);
-    // console.log("created New entry to DB", createdTimeslot)
-  }
+      // const createdTimeslot = await InviteDB.create(updateMemberToTimeslot);
+      // console.log("created New entry to DB", createdTimeslot)
+    }
 
   } catch (error) {
-  console.log("try error")
-  console.log(error)
-}
+    console.log("try error")
+    console.log(error)
+  }
 
 
 }

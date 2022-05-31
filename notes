@@ -56,3 +56,17 @@
     //   },
     // });
   //});
+
+
+//   db.testing.findOne(  
+//     { _id: "id1", "array.active" : 1 },
+//     { "array.$": 1 }
+// );
+// There is still a restriction which might or might not be problematic for your use-case: The $-operator only returns the first entry of each array per document. You are using findOne so I assume your intention is to get only one array entry anyway. But this restriction might bite you in the future.
+
+// When you want to get all the array entries, you will have to use an aggregation pipeline with 3 steps.
+
+// filter the document(s) you need results from with $match
+// unwind the arrays to streams of individual documents with $unwind
+// filter that resulting document-stream again by the condition which applies to array attributes with another $match
+// (optional) reduce the documents to only those fields you want with $project
