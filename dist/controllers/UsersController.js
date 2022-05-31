@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findSuggestions = exports.getRounded24HrsString = exports.findUserChoice = exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
-const User_1 = __importDefault(require("../models/User"));
 const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
 const router = express_1.default.Router();
 const timeFunctions_1 = __importDefault(require("../data/timeFunctions"));
@@ -97,32 +96,32 @@ router.get("/seed", async (req, res) => {
             vacantCapacity: 2,
             invitelink: "https://t.me/+bRjtUKOXVtVhZjM1"
         },
-        {
-            grpchatid: 327592353,
-            enterAL: true,
-            locationToMeet: "CCK Mrt",
-            //username: { type: String, unique: true, required: true },
-            timeslot: {
-                date: x_,
-                day: arrays_2.default[dateConvert(x_).getDay()],
-                timing: getRounded24HrsString(dateConvert(x_))
-            },
-            invitedMembers: [
-                {
-                    username: "sprite",
-                    isDriving: { exist: true, spareCapacity: 3 },
-                    timeInvited: y_ //{ type: Date },
-                    //Derived time to delete member invite if no news after 3mins
-                }, {
-                    username: "honeylemon",
-                    isDriving: { exist: false, spareCapacity: null },
-                    timeInvited: x_ //{ type: Date },
-                    //Derived time to delete member invite if no news after 3mins
-                }
-            ],
-            vacantCapacity: 4,
-            invitelink: "https://t.me/+bRjtUKOXVtVhZjM1"
-        }
+        // {
+        //   grpchatid: 327592353,//[{ type: Number, unique: true }],
+        //   enterAL: true,//{type: Boolean},
+        //   locationToMeet: "CCK Mrt",//{type: String},
+        //   //username: { type: String, unique: true, required: true },
+        //   timeslot: {
+        //     date: x_,
+        //     day: integerToDay[dateConvert(x_).getDay()],
+        //     timing: getRounded24HrsString(dateConvert(x_))
+        //   },//{ type: Date }, //, default: Date.now 
+        //   invitedMembers: [
+        //     {
+        //       username: "sprite",//{ type: String },
+        //       isDriving: { exist: true, spareCapacity: 3 },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+        //       timeInvited: y_//{ type: Date },
+        //       //Derived time to delete member invite if no news after 3mins
+        //     }, {
+        //       username: "honeylemon",//{ type: String },
+        //       isDriving: { exist: false, spareCapacity: null },//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+        //       timeInvited: x_//{ type: Date },
+        //       //Derived time to delete member invite if no news after 3mins
+        //     }
+        //   ],
+        //   vacantCapacity: 4,//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
+        //   invitelink: "https://t.me/+bRjtUKOXVtVhZjM1"
+        // }
     ];
     await inviteLinkDB_1.default.deleteMany({});
     await inviteLinkDB_1.default.insertMany(existingChats);
@@ -183,8 +182,14 @@ const findLaxSuggestions = async (session) => {
     }
 };
 //If no timeslot match the derived timeslot
-const suggestSpecificTimeslot = (session) => {
+const suggestSpecificTimeslot = (session, derivedTime, laxsuggest, checkExactTimeexist) => {
     const rounded = (0, timeFunctions_1.default)(session.timeslot.date);
+    const checkLocationExisting = laxsuggest.filter((ti) => {
+        if (ti.timeslot.date.getTime() === derivedTime.getTime()) {
+            return true;
+        }
+    });
+    console.log("checkLocationExisting>>>>", checkLocationExisting);
     const array = [{
             enterAL: session.enterAL,
             locationToMeet: "JE Mrt",
@@ -203,7 +208,20 @@ const suggestSpecificTimeslot = (session) => {
                 timing: getRounded24HrsString(session.timeslot.date) //string
             }
         }];
-    return array;
+    if (checkExactTimeexist) {
+        if (checkLocationExisting.length > 1)
+            return []; ///this is just a bandaid => if JE and CCK is present (vacancy gte >0), dont pass specific timeslot
+        else if (checkLocationExisting[0].locationToMeet === "JE Mrt") {
+            console.log("array.slice(-1)", array.slice(-1));
+            return array.slice(-1);
+        }
+        else if (checkLocationExisting[0].locationToMeet === "CCK Mrt") {
+            console.log("array.slice(0,1)", array.slice(0, 1));
+            return array.slice(0, 1);
+        }
+    }
+    else
+        return array;
 };
 //Driver should not see another driver
 const findUserChoice = async (session) => {
@@ -215,32 +233,37 @@ const findUserChoice = async (session) => {
     console.log("derivedTime", derivedTime);
     console.log("derivedTimegetTime", derivedTime.getTime());
     const laxSuggestions = await findLaxSuggestions(session); //Specifically timeslots existing in database relaxed criterion <timeslot within 90mins>
-    console.log("suggestions", laxSuggestions);
+    console.log("laxsuggestions", laxSuggestions);
     /////CREATE TIMESLOT IF NO EXACT TIMESLOT FOUND IN DATABASE
     const finalSuggestion = async () => {
         const checkExactTimeExist = laxSuggestions.some((ti) => { return ((ti.timeslot.date.getTime() === derivedTime.getTime())); });
-        console.log("checkExactTimeExist", checkExactTimeExist);
-        if (!checkExactTimeExist) {
-            return [...laxSuggestions, ...suggestSpecificTimeslot(session)];
-        }
-        else
-            return laxSuggestions;
+        console.log("suggestSpecificTimeslot(session,laxSuggestions,checkExactTimeExist)", suggestSpecificTimeslot(session, derivedTime, laxSuggestions, checkExactTimeExist));
+        return [...laxSuggestions, ...suggestSpecificTimeslot(session, derivedTime, laxSuggestions, checkExactTimeExist)];
     };
     const completeSuggestions = await finalSuggestion();
     return completeSuggestions;
 };
 exports.findUserChoice = findUserChoice;
 const totalCapacity = (isDrive) => {
-    if (isDrive)
-        return isDrive.spareCapacity; //OR Driver capacity
+    const { exist, spareCapacity } = isDrive;
+    console.log("isDrive", exist);
+    console.log("isDrivespareCapacity", spareCapacity);
+    if (exist)
+        return spareCapacity; //OR Driver capacity
     else
         return (4 - 1); //4 carpoolers - the user
 };
-const updateCapacity = (isDrive, totalmembers) => {
-    if (isDrive)
-        return isDrive.spareCapacity - (totalmembers - 1); //Sparecap - members exclude driver
-    else if (!isDrive) {
-        return (totalmembers - 1);
+const updateCapacity = (isDrive, totalmembers, driverCap) => {
+    const { exist, spareCapacity } = isDrive;
+    console.log("isDrive", exist);
+    console.log("isDrivespareCapacity", spareCapacity);
+    if (exist)
+        return spareCapacity - (totalmembers - 1); //Sparecap - members exclude driver
+    else if (!exist && driverCap > 0) {
+        return driverCap - (totalmembers - 1);
+    } //Max carpool - final total members //+ case where user is not driver but grp has driver
+    else if (!exist) {
+        return 4 - totalmembers;
     }
 };
 const saveUserChoice = async (ctxt, selectedSlot) => {
@@ -278,27 +301,33 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                     { $match: { _id: 0, timeslot: { date: new Date(timeslot_) } } },
                 ]
             });
-            const findExisting = () => {
-                if (userIsDriver) {
+            console.log("findExistingSlot", findExistingSlot);
+            const findExisting = async (userdriver) => {
+                if (!userdriver)
+                    return findExistingSlot;
+                else if (userdriver) {
                     for (const obj4 of findExistingSlot) { //grps with no driver
                         if (obj4.invitedMembers.every((drive) => drive.isDriving.exist === false)) {
                             findExistingSlot_final.push(obj4);
                         }
+                        console.log("findExistingSlot_final", findExistingSlot_final);
                         return findExistingSlot_final;
                     }
                 }
-                else
-                    return findExistingSlot;
             };
-            const openSlotToUpdate = findExisting();
-            console.log("findWithDrivers", openSlotToUpdate);
+            const openSlotToUpdate = await findExisting(userIsDriver.exist);
             if (openSlotToUpdate?.length) { //find slot chosen. If Found, update to existing grp //else create this slot in database
-                console.log(openSlotToUpdate.length);
-                console.log("openSlotToUpdate", openSlotToUpdate);
                 const { _id, grpchatid, invitedMembers } = openSlotToUpdate[0];
-                console.log("_id", _id);
-                const totalmembers = invitedMembers.length;
-                console.log("totalmembers", totalmembers);
+                let driverCap = null;
+                const findDriverCap = openSlotToUpdate[0].invitedMembers.filter((el) => {
+                    if (el.isDriving.exist === true) {
+                        driverCap = el.isDriving.spareCapacity;
+                        console.log("driverCap", driverCap);
+                        return true;
+                    }
+                });
+                const totalmembers_final = invitedMembers.length + 1; // (include the addition of this member)
+                const update_Capacity = await updateCapacity(userIsDriver, totalmembers_final, driverCap);
                 const updateData = {
                     username: ctxt.session.username,
                     isDriving: ctxt.session.isDriving,
@@ -306,10 +335,11 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                     timeToExpire: timeNow3mins //+ 3mins
                     //Derived time to delete member invite if no news after 3mins
                 };
-                console.log("updateData", updateData);
-                const updateMember = await inviteLinkDB_1.default.findByIdAndUpdate({ _id: _id }, { vacantCapacity: updateCapacity(userIsDriver, totalmembers) });
-                //  {$addToSet: {invitedMembers: updateData }},
+                // console.log("updateCapacity(userIsDriver,totalmembers)", updateCapacity(userIsDriver.exist, totalmembers_final))
+                const updateVacantCap = await inviteLinkDB_1.default.findByIdAndUpdate({ _id: _id }, { $set: { vacantCapacity: update_Capacity } });
+                const updateMember = await inviteLinkDB_1.default.findByIdAndUpdate({ _id: _id }, { $addToSet: { invitedMembers: updateData } });
                 console.log("updateMemberadded", updateMember);
+                console.log("updateVacantCap", updateVacantCap);
             }
             else { //else create this slot in database
                 console.log("totalCapacity(userIsDriver)", totalCapacity(userIsDriver));
@@ -333,32 +363,6 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                 const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
                 console.log("created New entry to DB", createdTimeslot);
             }
-            // }
-            //Update existing slot
-            // return 'hi' 
-            // else if (!specificSlot) {         //create that specific timeslot for the user if no existing
-            // const totalCapacity = () => {
-            //   if (userIsDriver) return userIsDriver.spareCapacity
-            //   else return user.
-            // }//OR carpool (4pax)
-            // const updateMemberToTimeslot = {
-            //   grpchatid: `grpchatid from chats`,//[{ type: Number, unique: true }],
-            //   enterAL: enterAL,//{type: Boolean},
-            //   locationToMeet: locationToMeet,//{type: String},
-            //   timeslot: timeslot,//{ type: Date }, //, default: Date.now 
-            //   invitedMembers: [
-            //     {
-            //       username: `${ctxt.chat.username}`,//{ type: String },
-            //       isDriving: false,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-            //       timeInvited: Date.now(),//{ type: Date },
-            //       timeToExpire: Date.now() //+ 3mins
-            //       //Derived time to delete member invite if no news after 3mins
-            //     }],
-            //     vacantCapacity: totalCapacity()//{type: Number} //total capacity = Driver + spareCapacity //OR carpool (4pax)
-            //     inviteLink: inviteLink
-            // }
-            // const createdTimeslot = await InviteDB.create(updateMemberToTimeslot);
-            // console.log("created New entry to DB", createdTimeslot)
         }
     }
     catch (error) {
@@ -367,20 +371,17 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
     }
 };
 exports.saveUserChoice = saveUserChoice;
-// await outputSuggestedMRT(ctxt)
-router.post("/", async (req, res) => {
-    // console.log("req.body", req.body);
-    try {
-        const createdListing = await User_1.default.create(req.body);
-        const lister = await User_1.default.findOne({ username: req.body.lister });
-        lister.listings.push(createdListing._id);
-        await lister.save();
-        res.status(200).send(createdListing);
-    }
-    catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+// router.post("/", async (req, res) => {
+//     try {
+//       const createdListing = await User.create(req.body);
+//       const lister = await User.findOne({ username: req.body.lister });
+//       lister.listings.push(createdListing._id);
+//       await lister.save();
+//       res.status(200).send(createdListing);
+//     } catch (error) {
+//       res.status(400).json({ error: error.message });
+//     }
+//   });
 exports.default = router;
 //console.log(StatusCodes.UNAUTHORISED)
 // //* see login form
