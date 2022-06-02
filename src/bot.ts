@@ -48,9 +48,9 @@ const initiallise = {
     username: "",
     enterAL: undefined,
     isDriving: { exist: undefined, spareCapacity: null },
-    timeslot: { day: null, timing: null },
+    timeslot: { date: null, day: null, timing: null },
     locationToMeet: "",
-    suggestionTimeslots: [],
+    suggestionTimeslots: undefined,
 }
 
 /////////////FUNCTION for saving username and choice of time///////////
@@ -105,7 +105,7 @@ calculateMenu
         ctx.session.timeslot = { date: null, day: null, timing: null }
         ctx.session.step = "day";
         ctx.menu.nav("days_menu")
-        ctx.editMessageText(`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" })
+        ctx.editMessageText(dayText(ctx.session.enterAL), { parse_mode: "HTML" })//`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" })
     })
 // .text("Cancel", (ctx) => ctx.deleteMessage());
 
@@ -242,7 +242,11 @@ const userDriver_menu = new Menu("userDriver_menu")
             ctx.editMessageText(`How many passengers can you take?`, { parse_mode: "HTML" })
         } // handler
     ).row()
-    .back("Go Back")
+    .text("Go Back", (ctx) => {
+        ctx.session.enterAL = undefined
+        ctx.editMessageText(`Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`, { parse_mode: "HTML" })
+        ctx.menu.nav("start-menu")
+    })
 
 const userDriverText = () => `Are you a <b>Passenger</b> or <b>Driver</b>? `;
 const start_menu = new Menu("start-menu")
@@ -276,7 +280,7 @@ const start_menu = new Menu("start-menu")
 
 //REGISTER
 // timeMenu.register(opMRTmenu)
-// days_menu.register(timeMenu);  
+days_menu.register(calculateMenu);  
 userDriver_menu.register(driver_menu)
 userDriver_menu.register(days_menu);
 start_menu.register(userDriver_menu);
@@ -336,7 +340,7 @@ bot.command("adduser", (ctx) => {
 //     // Send the menu.
 //     await ctx.reply("Check out this menu:", { reply_markup: menu });
 //   });
-// bot.on("message", (ctx) => ctx.reply("Got another message!"))
+bot.on("message", (ctx) => ctx.reply("Got another message!"))
 
 
 // bot.on("message", (ctx) => {

@@ -412,7 +412,13 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
         } else {             //else create this slot in database
 
           //find free slot from ChatsDB
-          const findFreeChat = await Chat.find({ membersInside: {  $size: 0   } });
+          const findFreeChat = await Chat.find(
+            {$and: [
+              { membersInside: { $elemMatch: { username: "spareGw" } }},
+              { membersInside: {  $size: 1   } }]
+            })
+
+            
           const firstFreeChat = findFreeChat[0]
           console.log("findFreeChat",findFreeChat)
           console.log("firstFreeChat",firstFreeChat)
