@@ -22,6 +22,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -31,6 +34,7 @@ const router_1 = require("@grammyjs/router");
 const UsersController_1 = require("./controllers/UsersController");
 const dish_1 = require("./dish");
 const arrays_1 = __importStar(require("./data/arrays"));
+const Chat_1 = __importDefault(require("./models/Chat"));
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
 if (process.env.BOT_TOKEN == null)
@@ -289,6 +293,11 @@ bot.command("add", (ctx) => {
 bot.command("menu", async (ctx) => {
     const msgtext = ctx.msg.text;
     console.log(msgtext);
+});
+bot.command("chatdb", async (ctx) => {
+    const findFreeChat = await Chat_1.default.find({ membersInside: { $size: 0 } });
+    console.log("findFreeChat", findFreeChat);
+    console.log("findFreeChat[0]", findFreeChat[0]);
 });
 bot.command("adduser", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.

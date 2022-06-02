@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.findSuggestions = exports.getRounded24HrsString = exports.findUserChoice = exports.saveUserChoice = void 0;
 const express_1 = __importDefault(require("express"));
 const inviteLinkDB_1 = __importDefault(require("../models/inviteLinkDB"));
+const Chat_1 = __importDefault(require("../models/Chat"));
 const router = express_1.default.Router();
 const timeFunctions_1 = __importDefault(require("../data/timeFunctions"));
 const arrays_1 = require("../data/arrays");
 const arrays_2 = __importDefault(require("../data/arrays"));
-const grplinks_1 = __importDefault(require("../grpdata/grplinks"));
 const dateConvert = (ms) => {
     return new Date(ms);
 };
@@ -356,7 +356,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                 console.log("updateMemberadded", updateMember);
                 console.log("updateVacantCap", updateVacantCap);
             }
-            else if (openSlotToUpdate?.length) { //find slot chosen. If Found, update to existing grp //else create this slot in database
+            else if (openSlotToUpdate?.length) { //find slot chosen but got taken by another person. If Found, update to existing grp //else create this slot in database
                 console.log("chosen openSlotToUpdate");
                 const { _id, grpchatid, invitedMembers } = openSlotToUpdate[0];
                 let driverCap = null;
@@ -383,9 +383,14 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                 console.log("updateVacantCap", updateVacantCap);
             }
             else { //else create this slot in database
+                //find free slot from ChatsDB
+                const findFreeChat = await Chat_1.default.find({ membersInside: { $size: 0 } });
+                const firstFreeChat = findFreeChat[0];
+                console.log("findFreeChat", findFreeChat);
+                console.log("firstFreeChat", firstFreeChat);
                 console.log("totalCapacity(userIsDriver)", totalCapacity(userIsDriver));
                 const addTimeslot = {
-                    grpchatid: -705354562,
+                    grpchatid: firstFreeChat.chatid,
                     enterAL: enterAL,
                     locationToMeet: locationToMeet,
                     timeslot: { date: new Date(timeslot_), day: arrays_2.default[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },
@@ -399,7 +404,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                         }
                     ],
                     vacantCapacity: totalCapacity(userIsDriver),
-                    invitelink: grplinks_1.default[0], //search for empty slot
+                    invitelink: firstFreeChat.invitelink, //search for empty slot
                 };
                 const createdTimeslot = await inviteLinkDB_1.default.create(addTimeslot);
                 console.log("created New entry to DB", createdTimeslot);

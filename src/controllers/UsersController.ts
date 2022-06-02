@@ -1,6 +1,7 @@
 import express from "express";
 import User from "../models/User";
 import InviteDB from "../models/inviteLinkDB";
+import Chat from "../models/Chat";
 const router = express.Router();
 // const bcrypt = require("bcrypt");
 import { Router } from "@grammyjs/router";
@@ -9,7 +10,7 @@ import roundToNearest30 from "../data/timeFunctions";
 import { monthsArray } from "../data/arrays";
 import integerToDay from "../data/arrays";
 import links from "../grpdata/grplinks";
-import e from "express";
+
 
 const dateConvert = (ms) => {
   return new Date(ms)
@@ -378,7 +379,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
           console.log("updateVacantCap", updateVacantCap)
         }
 
-        else if (openSlotToUpdate?.length) {       //find slot chosen. If Found, update to existing grp //else create this slot in database
+        else if (openSlotToUpdate?.length) {       //find slot chosen but got taken by another person. If Found, update to existing grp //else create this slot in database
           console.log("chosen openSlotToUpdate")
           const { _id, grpchatid, invitedMembers } = openSlotToUpdate[0]
 
@@ -410,10 +411,15 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
 
         } else {             //else create this slot in database
 
+          //find free slot from ChatsDB
+          const findFreeChat = await Chat.find({ membersInside: {  $size: 0   } });
+          const firstFreeChat = findFreeChat[0]
+          console.log("findFreeChat",findFreeChat)
+          console.log("firstFreeChat",firstFreeChat)
+
           console.log("totalCapacity(userIsDriver)", totalCapacity(userIsDriver))
           const addTimeslot = {
-            grpchatid: -705354562,// search for empty rooms
-
+            grpchatid: firstFreeChat.chatid,// search for empty rooms
             enterAL: enterAL,//{type: Boolean},
             locationToMeet: locationToMeet,//{type: String},
             timeslot: { date: new Date(timeslot_), day: integerToDay[timeslot_.getDay()], timing: getRounded24HrsString(dateConvert(timeslot_)) },//{ type: Date }, //, default: Date.now 
@@ -426,7 +432,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                 //Derived time to delete member invite if no news after 3mins
               }],
             vacantCapacity: totalCapacity(userIsDriver), //toupdate constantly at group side
-            invitelink: links[0],  //search for empty slot
+            invitelink: firstFreeChat.invitelink,  //search for empty slot
           }
           const createdTimeslot = await InviteDB.create(addTimeslot);
           console.log("created New entry to DB", createdTimeslot)

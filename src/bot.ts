@@ -9,7 +9,7 @@ import scheduleDatabase from "./data/timeFunctions";
 import integerToDay, {monthsArray} from "./data/arrays";
 import { suggestions } from "./data/invitedata";
 import { time } from "console";
-
+import Chat from "./models/Chat";
 
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN)
@@ -313,6 +313,13 @@ bot.command("add", (ctx) => {
 bot.command("menu", async (ctx) => {
     const msgtext = ctx.msg.text;
     console.log(msgtext)
+
+});
+
+bot.command("chatdb", async (ctx) => {
+    const findFreeChat = await Chat.find({ membersInside: {  $size: 0   } });
+    console.log("findFreeChat",findFreeChat)
+    console.log("findFreeChat[0]",findFreeChat[0])
 
 });
 
