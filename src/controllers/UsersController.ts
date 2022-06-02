@@ -347,7 +347,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
         const openSlotToUpdate = await findExisting(userIsDriver.exist)
 
         /////SELECTED SLOT AVAILABILITY
-        const findSelectedSlot = await InviteDB.findOne({ _id: selectedSlot._id)
+        const findSelectedSlot = await InviteDB.findOne({ _id: selectedSlot._id})
         console.log("selectedSlot._id",selectedSlot._id)
         console.log("findSelectedSlot",findSelectedSlot)
 
@@ -445,13 +445,13 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
         }
       }
 
-    } catch (error) {
+     
+  
+  } catch (error) {
       console.log("try error")
       console.log(error)
     }
-
-
-  }
+}
 
 
 // router.post("/", async (req, res) => {
