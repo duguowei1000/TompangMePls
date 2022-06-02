@@ -271,6 +271,7 @@ const updateCapacity = (isDrive, totalmembers, driverCap) => {
 }
 
 const saveUserChoice = async (ctxt, selectedSlot) => {
+  try {
   const enterAL = selectedSlot.enterAL
   const timeslot_: Date = selectedSlot.timeslot.date
   console.log("selectedSlot.timeslot.date", selectedSlot.timeslot.date)
@@ -280,7 +281,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
   console.log('selectedSlot', selectedSlot)
   console.log("ctxt.chat.username ", ctxt.chat.username)
 
-  try {
+  
     const user = await InviteDB.findOne({ invitedMembers: { $elemMatch: { username: ctxt.chat.username } } });
 
 
@@ -293,10 +294,8 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
       const timeDay = user.timeslot.date.getDay()
       const timeTiming = user.timeslot.timing
       const inviteLink = user.invitelink
-      console.log(`userName${userName} && userDest${userlocationToMeet} && time ${timeTiming} ${inviteLink} , please press /start to update`)
-      // await ctxt.reply("hi")
-      await ctxt.reply(`You already chose ${timeDate} ${monthsArray[timeMth]}${integerToDay[timeDay]} ${timeTiming}hrs with this invite link ${inviteLink}, please press /start to update`)
 
+      return {toSave:false , saved: user , data:{ timeDate:timeDate, timeMth:timeMth , timeDay:timeDay, timeTiming:timeTiming, inviteLink:inviteLink}}
     } else if (!user) { //ADD SLOT OR UPDATE SLOT
 
       const timeNow3mins = new Date(Date.now() + 180000)
@@ -351,7 +350,7 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
         console.log("selectedSlot._id",selectedSlot._id)
         console.log("findSelectedSlot",findSelectedSlot)
 
-        if(findSelectedSlot?.vacantCapacity>0){
+        if(findSelectedSlot?.vacantCapacity>0){  //SELECTED SLOT has vacancies
           const { _id, grpchatid, invitedMembers } = findSelectedSlot
 
           let driverCap = null
@@ -375,47 +374,50 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
           const updateMember = await InviteDB.findByIdAndUpdate(
             { _id: _id }, { $addToSet: { invitedMembers: updateData } }
           )
-          console.log("updateMemberadded", updateMember)
-          console.log("updateVacantCap", updateVacantCap)
+          // console.log("updateMemberadded", updateMember)
+          console.log("updateMember to existing grp(exact slot)", updateMember)
+
+          return {toSave:true , saved: updateMember}
         }
 
-        else if (openSlotToUpdate?.length) {       //find slot chosen but got taken by another person. If Found, update to existing grp //else create this slot in database
-          console.log("chosen openSlotToUpdate")
-          const { _id, grpchatid, invitedMembers } = openSlotToUpdate[0]
+        // else if (openSlotToUpdate?.length) {       //find slot chosen but got taken by another person=>  If Found, update to existing grp //else create this slot in database
+        //   console.log("chosen openSlotToUpdate")
+        //   const { _id, grpchatid, invitedMembers } = openSlotToUpdate[0]
 
-          let driverCap = null
-          const findDriverCap = openSlotToUpdate[0].invitedMembers.filter((el)=>{ if(el.isDriving.exist === true){
-            driverCap = el.isDriving.spareCapacity ///only this is used here
-            console.log("driverCap",driverCap)
-            return true
-          }
-          }) 
-          const totalmembers_final = invitedMembers.length + 1 // (include the addition of this member)
-          const update_Capacity = await updateCapacity(userIsDriver, totalmembers_final,driverCap)
-          const updateData = {
-            username: ctxt.session.username,//{ type: String },
-            isDriving: ctxt.session.isDriving,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
-            timeInvited: Date.now(),//{ type: Date },
-            timeToExpire: timeNow3mins //+ 3mins
-            //Derived time to delete member invite if no news after 3mins
-          }
-          // console.log("updateCapacity(userIsDriver,totalmembers)", updateCapacity(userIsDriver.exist, totalmembers_final))
-          const updateVacantCap = await InviteDB.findByIdAndUpdate(
-            { _id: _id }, { $set: { vacantCapacity: update_Capacity } }
-          )
-          const updateMember = await InviteDB.findByIdAndUpdate(
-            { _id: _id }, { $addToSet: { invitedMembers: updateData } }
-          )
-          console.log("updateMemberadded", updateMember)
-          console.log("updateVacantCap", updateVacantCap)
+        //   let driverCap = null
+        //   const findDriverCap = openSlotToUpdate[0].invitedMembers.filter((el)=>{ if(el.isDriving.exist === true){
+        //     driverCap = el.isDriving.spareCapacity ///only this is used here
+        //     console.log("driverCap",driverCap)
+        //     return true
+        //   }
+        //   }) 
+        //   const totalmembers_final = invitedMembers.length + 1 // (include the addition of this member)
+        //   const update_Capacity = await updateCapacity(userIsDriver, totalmembers_final,driverCap)
+        //   const updateData = {
+        //     username: ctxt.session.username,//{ type: String },
+        //     isDriving: ctxt.session.isDriving,//{ exist: {type: Boolean} , spareCapacity:{ type: Number } },
+        //     timeInvited: Date.now(),//{ type: Date },
+        //     timeToExpire: timeNow3mins //+ 3mins
+        //     //Derived time to delete member invite if no news after 3mins
+        //   }
+        //   // console.log("updateCapacity(userIsDriver,totalmembers)", updateCapacity(userIsDriver.exist, totalmembers_final))
+        //   const updateVacantCap = await InviteDB.findByIdAndUpdate(
+        //     { _id: _id }, { $set: { vacantCapacity: update_Capacity } }
+        //   )
+        //   const updateMember = await InviteDB.findByIdAndUpdate(
+        //     { _id: _id }, { $addToSet: { invitedMembers: updateData } }
+        //   )
+        //   console.log("updateMember to existing grp(next available as first slot taken)", updateMember)
+        //   return updateMember 
 
-        } else {             //else create this slot in database
+        // } 
+        else {             //else create this slot in database
 
           //find free slot from ChatsDB
           const findFreeChat = await Chat.find(
             {$and: [
-              { membersInside: { $elemMatch: { username: "spareGw" } }},
-              { membersInside: {  $size: 1   } }]
+              //{ membersInside: { $elemMatch: { username: "spareGw" } }},
+              { membersInside: {  $size: 0   } }]
             })
 
             
@@ -442,9 +444,9 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
           }
           const createdTimeslot = await InviteDB.create(addTimeslot);
           console.log("created New entry to DB", createdTimeslot)
+          return {toSave:true , saved: createdTimeslot}
         }
       }
-
      
   
   } catch (error) {

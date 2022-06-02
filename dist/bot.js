@@ -76,6 +76,26 @@ const initiallise = {
 ////////////////OUTPUT MENU///////////
 ////DYNAMIC MENU\\\\
 // .url("About", "https://grammy.dev/plugins/menu").row()
+const slotChosenText = () => `Are you a <b>Passenger</b> or <b>Driver</b>? `;
+const slotchosen_menu = new menu_1.Menu("slotchosen_menu")
+    // .submenu(
+    //     "Going to Animal Lodge",
+    //     "userDriver_menu", // navigation target menu
+    //     (ctx) => {
+    //         ctx.editMessageText(slotChosenText(), { parse_mode: "HTML" })
+    //         ctx.session = {
+    //             step: "idle",
+    //             chatid: null,
+    //             username: "",
+    //             enterAL: true,
+    //             isDriving: { exist: undefined, spareCapacity: null },
+    //             timeslot: { day: null, timing: null },
+    //             locationToMeet: "",
+    //             suggestionTimeslots: undefined,
+    //         }
+    //     } // handler
+    // ).row()
+    .url("About", "https://grammy.dev/plugins/menu").row();
 const calculateMenu = new menu_1.Menu("calculateMenu");
 calculateMenu
     .dynamic((ctx) => {
@@ -95,11 +115,33 @@ calculateMenu
                 return "No Driver";
         };
         if (!suggestOutput[i].enterAL) { //Output for leaving AL
-            range.text(`${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} drop@${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => { (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); }).row(); //output invitelink
+            range.text(`${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} drop@${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, async (ctx) => {
+                const { toSave, saved, data } = await (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); //+ reply message
+                if (toSave === false) {
+                    console.log("saved-1", saved);
+                    console.log("data-1", data);
+                    await ctx.reply(`You already chose ${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`);
+                }
+                else {
+                    console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate());
+                    await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to leave Animal Lodge and drop off at ${saved.locationToMeet}.\n Please join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                }
+            }).row(); //output invitelink
         }
         else if (suggestOutput[i].enterAL) {
             range.text(//Output for entering AL
-            `${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, (ctx) => { (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); }).row(); //output invitelink
+            `${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`, async (ctx) => {
+                const { toSave, saved, data } = await (0, UsersController_1.saveUserChoice)(ctx, suggestOutput[i]); //+ reply message
+                if (toSave === false) {
+                    console.log("saved-2", saved);
+                    console.log("data-2", data);
+                    await ctx.reply(`You already chose ${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`);
+                }
+                else {
+                    console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate());
+                    await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to meet at ${saved.locationToMeet} bound for Animal Lodge.\nPlease join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                }
+            }).row(); //output invitelink
         }
     }
     return range;
@@ -150,8 +192,7 @@ stepRouter.route("time", async (ctx) => {
     ctx.session.suggestionTimeslots = await (0, UsersController_1.findUserChoice)(ctx.session); //find if it is amongst existing DB, else to add to suggestion
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots);
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots[0].invitedMembers);
-    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${arrays_1.monthsArray[ctx.session.timeslot.date.getMonth()]} ${arrays_1.default[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
-    `, { reply_markup: calculateMenu, parse_mode: "HTML" });
+    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${arrays_1.monthsArray[ctx.session.timeslot.date.getMonth()]} ${arrays_1.default[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>\nPlease note: Once timeslot chosen, you have 3mins to join the group- else the slot will be opened up for others`, { reply_markup: calculateMenu, parse_mode: "HTML" });
 });
 const days_menu = new menu_1.Menu("days_menu");
 days_menu
@@ -265,6 +306,7 @@ const start_menu = new menu_1.Menu("start-menu")
 });
 //REGISTER
 // timeMenu.register(opMRTmenu)
+calculateMenu.register(slotchosen_menu);
 days_menu.register(calculateMenu);
 userDriver_menu.register(driver_menu);
 userDriver_menu.register(days_menu);

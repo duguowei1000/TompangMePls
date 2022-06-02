@@ -6,7 +6,7 @@ import { Router } from "@grammyjs/router";
 import { saveUserChoice, findUserChoice } from "./controllers/UsersController";
 import { dishes } from "./dish";
 import scheduleDatabase from "./data/timeFunctions";
-import integerToDay, {monthsArray} from "./data/arrays";
+import integerToDay, { monthsArray } from "./data/arrays";
 import { suggestions } from "./data/invitedata";
 import { time } from "console";
 import Chat from "./models/Chat";
@@ -70,6 +70,28 @@ const initiallise = {
 ////DYNAMIC MENU\\\\
 // .url("About", "https://grammy.dev/plugins/menu").row()
 
+const slotChosenText = () => `Are you a <b>Passenger</b> or <b>Driver</b>? `;
+const slotchosen_menu = new Menu("slotchosen_menu")
+    // .submenu(
+    //     "Going to Animal Lodge",
+    //     "userDriver_menu", // navigation target menu
+    //     (ctx) => {
+    //         ctx.editMessageText(slotChosenText(), { parse_mode: "HTML" })
+    //         ctx.session = {
+    //             step: "idle",
+    //             chatid: null,
+    //             username: "",
+    //             enterAL: true,
+    //             isDriving: { exist: undefined, spareCapacity: null },
+    //             timeslot: { day: null, timing: null },
+    //             locationToMeet: "",
+    //             suggestionTimeslots: undefined,
+    //         }
+    //     } // handler
+    // ).row()
+    .url("About", "https://grammy.dev/plugins/menu").row()
+
+
 
 const calculateMenu = new Menu("calculateMenu");
 calculateMenu
@@ -80,23 +102,44 @@ calculateMenu
             const gotDriver = (i: number) => {
                 const checkDriver = suggestOutput[i]?.invitedMembers //optional chaining for specific timeslots
                 if (checkDriver === undefined) return "No Driver"
-                if(checkDriver.some((el)=>  {
-                    return (el.isDriving.exist===true)
-                })) { return "Incl. Driver" } 
-                else 
-                return "No Driver"
-                
+                if (checkDriver.some((el) => {
+                    return (el.isDriving.exist === true)
+                })) { return "Incl. Driver" }
+                else
+                    return "No Driver"
+
             }
-            if(!suggestOutput[i].enterAL){//Output for leaving AL
-                range.text( 
+            if (!suggestOutput[i].enterAL) {//Output for leaving AL
+                range.text(
                     `${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} drop@${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`,
-                    (ctx) => {saveUserChoice(ctx, suggestOutput[i])}).row(); //output invitelink
-            }else if(suggestOutput[i].enterAL){
+                    async (ctx) => {
+                        const { toSave, saved,data } = await saveUserChoice(ctx, suggestOutput[i]) //+ reply message
+                        if (toSave === false) {
+                            console.log("saved-1",saved)
+                            console.log("data-1",data)
+  
+                            await ctx.reply(`You already chose ${data.timeDate} ${monthsArray[data.timeMth]}${integerToDay[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`)
+                        } else {
+                            console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate())
+                            await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${monthsArray[saved.timeslot.date.getMonth()]} ${integerToDay[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to leave Animal Lodge and drop off at ${saved.locationToMeet}.\n Please join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                        }
+                    }).row(); //output invitelink
+            } else if (suggestOutput[i].enterAL) {
                 range.text( //Output for entering AL
                     `${suggestOutput[i].timeslot.day} ${suggestOutput[i].timeslot.timing} @ ${suggestOutput[i].locationToMeet} (${suggestOutput[i].invitedMembers?.length ?? 0}pax ${gotDriver(i)})`,
-                    (ctx) => {saveUserChoice(ctx, suggestOutput[i])}).row(); //output invitelink
+                    async (ctx) => {
+                        const { toSave, saved,data } = await saveUserChoice(ctx, suggestOutput[i]) //+ reply message
+                        if (toSave === false) {
+                            console.log("saved-2",saved)
+                            console.log("data-2",data)
+                            await ctx.reply(`You already chose ${data.timeDate} ${monthsArray[data.timeMth]}${integerToDay[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`)
+                        } else {
+                        
+                        console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate())
+                        await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${monthsArray[saved.timeslot.date.getMonth()]} ${integerToDay[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to meet at ${saved.locationToMeet} bound for Animal Lodge.\nPlease join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                    }
+                }).row(); //output invitelink
             }
-            
         }
         return range;
     }
@@ -128,7 +171,7 @@ stepRouter.route("time", async (ctx) => {
         return;
     }
 
-    const convertHrsMins = (timestring)=>{  //Update Date Object to specified Hours and Mins
+    const convertHrsMins = (timestring) => {  //Update Date Object to specified Hours and Mins
         const wroteMins = String(timestring).slice(-2)
         const wroteHrs = String(timestring).slice(0, 2)
         const initialDate = new Date(ctx.session.timeslot.date) //update derived date from previous entry
@@ -143,18 +186,17 @@ stepRouter.route("time", async (ctx) => {
         const added = "0".concat(parseTime)
         ctx.session.timeslot.timing = added
         convertHrsMins(added)
-    }else{
+    } else {
         ctx.session.timeslot.timing = parseTime;
         convertHrsMins(timeWrote)
-    } 
+    }
 
     // Advance form to step for Calculate Output
     ctx.session.step = "calculate";
     ctx.session.suggestionTimeslots = await findUserChoice(ctx.session)   //find if it is amongst existing DB, else to add to suggestion
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots)
     console.log('>>>suggestionsTimeslot', ctx.session.suggestionTimeslots[0].invitedMembers)
-    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${monthsArray[ctx.session.timeslot.date.getMonth()]} ${integerToDay[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>
-    `, { reply_markup: calculateMenu , parse_mode: "HTML" });
+    await ctx.reply(`Got it! These are the suggested timeslots that best match your choice: <b>${ctx.session.timeslot.date.getDate()} ${monthsArray[ctx.session.timeslot.date.getMonth()]} ${integerToDay[ctx.session.timeslot.date.getDay()]} ${ctx.session.timeslot.timing}hrs </b>\nPlease note: Once timeslot chosen, you have 3mins to join the group- else the slot will be opened up for others`, { reply_markup: calculateMenu, parse_mode: "HTML" });
 })
 
 const days_menu = new Menu("days_menu");
@@ -163,11 +205,11 @@ days_menu
         const range = new MenuRange();
         for (let i = 0; i < 3; i++) {
 
-            const thisDay = (i:any) => {
+            const thisDay = (i: any) => {
                 const dateSpecified = new Date
-                return dateSpecified.setDate(dateSpecified.getDate() +i) //next date alr
+                return dateSpecified.setDate(dateSpecified.getDate() + i) //next date alr
             }
-            const convertToDay = new Date(thisDay(i)) 
+            const convertToDay = new Date(thisDay(i))
             const outText = (i) => {
                 if (i === 0) return `Today`
                 else if (i === 1) return `${integerToDay[convertToDay.getDay()]} (Tomorrow)`
@@ -175,14 +217,14 @@ days_menu
             }
             range.text(outText(i), (ctx) => {
                 ctx.session.step = "time"
-                ctx.session.timeslot = { date: convertToDay, day: integerToDay[convertToDay.getDay()] }   
+                ctx.session.timeslot = { date: convertToDay, day: integerToDay[convertToDay.getDay()] }
                 ctx.menu.close()
                 ctx.editMessageText(`Please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm).`, { parse_mode: "HTML" })
                 console.log("ctx.session.timeslot.date", ctx.session.timeslot.date)
             })
                 .row();
         }
-        
+
         return range;
     }
     )
@@ -280,7 +322,8 @@ const start_menu = new Menu("start-menu")
 
 //REGISTER
 // timeMenu.register(opMRTmenu)
-days_menu.register(calculateMenu);  
+calculateMenu.register(slotchosen_menu)
+days_menu.register(calculateMenu);
 userDriver_menu.register(driver_menu)
 userDriver_menu.register(days_menu);
 start_menu.register(userDriver_menu);
@@ -321,9 +364,9 @@ bot.command("menu", async (ctx) => {
 });
 
 bot.command("chatdb", async (ctx) => {
-    const findFreeChat = await Chat.find({ membersInside: {  $size: 0   } });
-    console.log("findFreeChat",findFreeChat)
-    console.log("findFreeChat[0]",findFreeChat[0])
+    const findFreeChat = await Chat.find({ membersInside: { $size: 0 } });
+    console.log("findFreeChat", findFreeChat)
+    console.log("findFreeChat[0]", findFreeChat[0])
 
 });
 
