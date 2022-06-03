@@ -35,6 +35,7 @@ const grammy_1 = require("grammy");
 const mongoose_1 = __importDefault(require("mongoose"));
 const ChatsController_1 = __importDefault(require("./controllers/ChatsController"));
 const UsersController_1 = __importDefault(require("./controllers/UsersController"));
+const CountersController_1 = __importDefault(require("./controllers/CountersController"));
 const bot_1 = __importDefault(require("./bot"));
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
@@ -64,6 +65,7 @@ app.use(express_1.default.urlencoded({ extended: false })); //Parse URL-encoded 
 app.use(express_1.default.json());
 app.use("/chat", ChatsController_1.default);
 app.use("/user", UsersController_1.default);
+app.use("/counter", CountersController_1.default);
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'));
 //async await
 app.post(`/${botToken}`, (req, res) => {

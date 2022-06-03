@@ -10,6 +10,7 @@ const Chat_1 = __importDefault(require("../models/Chat"));
 const router = express_1.default.Router();
 const timeFunctions_1 = __importDefault(require("../data/timeFunctions"));
 const arrays_1 = __importDefault(require("../data/arrays"));
+const counter_1 = __importDefault(require("../models/counter"));
 const dateConvert = (ms) => {
     return new Date(ms);
 };
@@ -390,7 +391,15 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
                         { membersInside: { $size: 0 } }
                     ]
                 });
-                const firstFreeChat = findFreeChat[0];
+                const counter = await counter_1.default.findOne();
+                console.log("counterCounts", counter.counter);
+                if (counter.counter > 10) {
+                    counter.counter = 10;
+                }
+                else
+                    counter.counter++;
+                await counter.save();
+                const firstFreeChat = await findFreeChat[counter.counter]; //choose by increment of 1 counter
                 console.log("findFreeChat", findFreeChat);
                 console.log("firstFreeChat", firstFreeChat);
                 console.log("totalCapacity(userIsDriver)", totalCapacity(userIsDriver));
@@ -423,17 +432,6 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
     }
 };
 exports.saveUserChoice = saveUserChoice;
-// router.post("/", async (req, res) => {
-//     try {
-//       const createdListing = await User.create(req.body);
-//       const lister = await User.findOne({ username: req.body.lister });
-//       lister.listings.push(createdListing._id);
-//       await lister.save();
-//       res.status(200).send(createdListing);
-//     } catch (error) {
-//       res.status(400).json({ error: error.message });
-//     }
-//   });
 exports.default = router;
 //console.log(StatusCodes.UNAUTHORISED)
 // //* see login form

@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../models/User";
+import User from "../models/counter";
 import InviteDB from "../models/inviteLinkDB";
 import Chat from "../models/Chat";
 const router = express.Router();
@@ -10,7 +10,7 @@ import roundToNearest30 from "../data/timeFunctions";
 import { monthsArray } from "../data/arrays";
 import integerToDay from "../data/arrays";
 import links from "../grpdata/grplinks";
-
+import Counter from "../models/counter";
 
 const dateConvert = (ms) => {
   return new Date(ms)
@@ -419,9 +419,15 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
               //{ membersInside: { $elemMatch: { username: "spareGw" } }},
               { membersInside: {  $size: 0   } }]
             })
-
+            const counter = await Counter.findOne();
+            console.log("counterCounts",counter.counter)
+            if(counter.counter>10){
+              counter.counter = 10
+            }else counter.counter ++
+            await counter.save();
             
-          const firstFreeChat = findFreeChat[0]
+            
+          const firstFreeChat = await findFreeChat[counter.counter] //choose by increment of 1 counter
           console.log("findFreeChat",findFreeChat)
           console.log("firstFreeChat",firstFreeChat)
 
@@ -454,21 +460,6 @@ const saveUserChoice = async (ctxt, selectedSlot) => {
       console.log(error)
     }
 }
-
-
-// router.post("/", async (req, res) => {
-//     try {
-//       const createdListing = await User.create(req.body);
-//       const lister = await User.findOne({ username: req.body.lister });
-
-//       lister.listings.push(createdListing._id);
-//       await lister.save();
-
-//       res.status(200).send(createdListing);
-//     } catch (error) {
-//       res.status(400).json({ error: error.message });
-//     }
-//   });
 
 
   export default router

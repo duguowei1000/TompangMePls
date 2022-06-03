@@ -7,6 +7,7 @@ import { webhookCallback } from "grammy";
 import mongoose from "mongoose";
 import chatsController from "./controllers/ChatsController";
 import usersController from "./controllers/UsersController";
+import countersController from "./controllers/CountersController";
 import  bot  from "./bot";
 
 //Parameters
@@ -43,6 +44,7 @@ app.use(express.urlencoded({ extended: false })); //Parse URL-encoded bodies
 app.use(express.json());
 app.use("/chat", chatsController);
 app.use("/user", usersController);
+app.use("/counter", countersController);
 
 app.get('/', (req, res) => res.send('Hello World_yesyesyo!'))
 

@@ -35,6 +35,7 @@ const UsersController_1 = require("./controllers/UsersController");
 const dish_1 = require("./dish");
 const arrays_1 = __importStar(require("./data/arrays"));
 const Chat_1 = __importDefault(require("./models/Chat"));
+const counter_1 = __importDefault(require("./models/counter"));
 //////BOT
 console.log(">>> in bot.ts >>>", process.env.BOT_TOKEN);
 if (process.env.BOT_TOKEN == null)
@@ -95,7 +96,7 @@ const slotchosen_menu = new menu_1.Menu("slotchosen_menu")
     //         }
     //     } // handler
     // ).row()
-    .url("About", "https://grammy.dev/plugins/menu").row();
+    .url("Login", "https://generalassemb.ly/").row();
 const calculateMenu = new menu_1.Menu("calculateMenu");
 calculateMenu
     .dynamic((ctx) => {
@@ -120,11 +121,11 @@ calculateMenu
                 if (toSave === false) {
                     console.log("saved-1", saved);
                     console.log("data-1", data);
-                    await ctx.reply(`You already chose ${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`);
+                    await ctx.reply(`Sorry <b>${ctx.session.username}</b>!\nYou have already chosen the timeslot @  <b>${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs </b> with this invite link ${data.inviteLink},\nplease press /delete to update`, { parse_mode: "HTML" });
                 }
                 else {
                     console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate());
-                    await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to leave Animal Lodge and drop off at ${saved.locationToMeet}.\n Please join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                    await ctx.editMessageText(`You have chosen:\n<b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to leave Animal Lodge and drop off at ${saved.locationToMeet}.\n Please join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\n Kindly coordinate with your fellow car poolers or Driver on where to gather. If there is no driver, you can consider Grab or Taxi to destination. Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
                 }
             }).row(); //output invitelink
         }
@@ -135,11 +136,11 @@ calculateMenu
                 if (toSave === false) {
                     console.log("saved-2", saved);
                     console.log("data-2", data);
-                    await ctx.reply(`You already chose ${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs with this invite link ${data.inviteLink}, please press /start to update`);
+                    await ctx.reply(`Sorry <b>${ctx.session.username}</b>!\nYou have already chosen the timeslot @ <b>${data.timeDate} ${arrays_1.monthsArray[data.timeMth]}${arrays_1.default[data.timeDay]} ${data.timeTiming}hrs </b> with this invite link ${data.inviteLink},\nplease press /delete to update`, { parse_mode: "HTML" });
                 }
                 else {
                     console.log("saved.timeslot.date.getDate()", saved.timeslot.date.getDate());
-                    await ctx.editMessageText(`You have chosen: <b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to meet at ${saved.locationToMeet} bound for Animal Lodge.\nPlease join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\nKindly discuss where to meet your fellow car poolers (or driver). Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
+                    await ctx.editMessageText(`You have chosen:\n<b>${saved.timeslot.date.getDate()} ${arrays_1.monthsArray[saved.timeslot.date.getMonth()]} ${arrays_1.default[saved.timeslot.date.getDay()]} ${saved.timeslot.timing}hrs </b> to leave Animal Lodge and drop off at ${saved.locationToMeet}.\n Please join the group via ${saved.invitelink} in 3 mins else your slot will be opened up for others.\n Kindly coordinate with your fellow car poolers or Driver on where to gather. If there is no driver, you can consider Grab or Taxi to destination. Dont be late :) `, { reply_markup: slotchosen_menu, parse_mode: "HTML" });
                 }
             }).row(); //output invitelink
         }
@@ -152,7 +153,6 @@ calculateMenu
     ctx.menu.nav("days_menu");
     ctx.editMessageText(dayText(ctx.session.enterAL), { parse_mode: "HTML" }); //`Out of range, please write a time between <i>0600hrs</i> to <i>2200hrs</i> in 24hr format (e.g <b>1730</b> for 5:30pm.)`, { parse_mode: "HTML" })
 });
-// .text("Cancel", (ctx) => ctx.deleteMessage());
 // Use router
 const stepRouter = new router_1.Router((ctx) => ctx.session.step);
 // Define step that handles the time.
@@ -287,22 +287,15 @@ const start_menu = new menu_1.Menu("start-menu")
     .submenu("Going to Animal Lodge", "userDriver_menu", // navigation target menu
 (ctx) => {
     ctx.editMessageText(userDriverText(), { parse_mode: "HTML" });
-    ctx.session = {
-        step: "idle",
-        chatid: null,
-        username: "",
-        enterAL: true,
-        isDriving: { exist: undefined, spareCapacity: null },
-        timeslot: { day: null, timing: null },
-        locationToMeet: "",
-        suggestionTimeslots: undefined,
-    };
+    ctx.session.enterAL = true;
+    ctx.session.suggestionTimeslots = [];
 } // handler
 ).row()
     .submenu("Leaving Animal Lodge", "userDriver_menu", // navigation target menu
 (ctx) => {
     ctx.editMessageText(userDriverText(), { parse_mode: "HTML" }); // handler
     ctx.session.enterAL = false;
+    ctx.session.suggestionTimeslots = [];
 });
 //REGISTER
 // timeMenu.register(opMRTmenu)
@@ -344,6 +337,14 @@ bot.command("chatdb", async (ctx) => {
     const findFreeChat = await Chat_1.default.find({ membersInside: { $size: 0 } });
     console.log("findFreeChat", findFreeChat);
     console.log("findFreeChat[0]", findFreeChat[0]);
+});
+bot.command("counterdb", async (ctx) => {
+    const counter = await counter_1.default.findOne();
+    console.log("counter", counter);
+    console.log("counterCounts", counter.counter);
+    counter.counter++;
+    console.log("counterCounts", counter.counter);
+    await counter.save();
 });
 bot.command("adduser", (ctx) => {
     // `item` will be 'apple pie' if a user sends '/add apple pie'.
