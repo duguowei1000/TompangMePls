@@ -22,5 +22,5 @@ Users  indicate:
 4) Which Day?
 5) Preferred Time
 6) Output: Suggested Timeslots for users to choose
-7) Once timeslot chosen, user will be issued an invite link to join. Wh
+7) Once timeslot chosen, user will be issued an invite link to join. 
 8) In their respective telegram grps, it will be up to them to decide whether to carry out a carpool/ driver hitch and the exact place to meet :)
