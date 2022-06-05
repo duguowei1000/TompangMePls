@@ -1,6 +1,11 @@
 # heroku_ts_grammy_webhook
 heroku_ts_grammy_webhook
 
+Techstack: 
+Javascript
+MongoDB
+Grammy (typescript library) - nodejs wrapper for telegram
+
 Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).  
 
 Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there is a Driver, they can hitch together to destination.  
