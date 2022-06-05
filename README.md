@@ -1,14 +1,14 @@
 # heroku_ts_grammy_webhook
 heroku_ts_grammy_webhook
 
-Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).
+Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).  
 
-Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there is a Driver, they can hitch together to destination.
-Telegram bot : Please add @gwtestingbot
-This bot serves to connect people who are going/leaving Animal lodge at the same time and gather them at the MRT of their choice (Jurong East(JE) or Choa Chu Kang(CCK))
+Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there is a Driver, they can hitch together to destination.  
+Telegram bot : Please add @gwtestingbot. 
+This bot serves to connect people who are going/leaving Animal lodge at the same time and gather them at the MRT of their choice (Jurong East(JE) or Choa Chu Kang(CCK)). 
 
 
-Users  indicate:
+Users  indicate:  
 1) Going/Leaving Animal Lodge
 2) Passenger/Driver
 3) If Driver( how many passengers they can take?)
