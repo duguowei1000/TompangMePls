@@ -40,6 +40,7 @@ const bot_1 = __importDefault(require("./bot"));
 //Parameters
 const botToken = String(process.env.BOT_TOKEN);
 const domain = String(process.env.DOMAIN);
+//MONGO_URI="mongodb://localhost:27017/tompang"
 const mongoURI = String(process.env.MONGO_URI);
 mongoose_1.default.connect(mongoURI, {}, () => {
     console.log("connected to mongodb");
