@@ -6,9 +6,9 @@ Techstack:
 2) MongoDB  
 3) Grammy (typescript library) - nodejs wrapper for telegram
 
-__Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).  __ 
+Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).  
 
-__Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there is a Driver, they can hitch together to destination.  __
+Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there is a Driver, they can hitch together to destination.  
 
 This bot serves to connect people who are going/leaving Animal lodge at the same time and gather them at the MRT of their choice (Jurong East(JE) or Choa Chu Kang(CCK)). 
 
