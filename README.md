@@ -1,10 +1,10 @@
 # heroku_ts_grammy_webhook
 heroku_ts_grammy_webhook
 
-Techstack: 
-Javascript
-MongoDB
-Grammy (typescript library) - nodejs wrapper for telegram
+Techstack:    
+1) Javascript  
+2) MongoDB  
+3) Grammy (typescript library) - nodejs wrapper for telegram
 
 Context: Volunteers going to Animal lodge have to walk a long journey from the nearest busstop (abt 15mins and outdoors).  
 
