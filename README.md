@@ -13,7 +13,7 @@ Solution: Using a Telegram Bot to coordinate a carpool (Grab/Taxi) or if there i
 This bot serves to connect people who are going/leaving Animal lodge at the same time and gather them at the MRT of their choice (Jurong East(JE) or Choa Chu Kang(CCK)). 
 
 __Action__      
-__Telegram bot : Please add @tompangpls__. 
+__Telegram bot : Please add @tompangplsbot__. 
 
 Users  indicate:  
 1) Going/Leaving Animal Lodge
