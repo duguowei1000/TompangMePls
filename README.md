@@ -13,17 +13,22 @@ This bot serves to connect people who are going/leaving Animal lodge at the same
 __Action__      
 __Telegram bot : Please add @tompangplsbot__. 
 
-User Flow:
-![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.png)
-
-Users  indicate:  
+__User Flow:__
+  
 1) Going/Leaving Animal Lodge
-![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/2.png?raw=true )
-
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.png)
 2) Passenger/Driver
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/2.png)
 3) If Driver( how many passengers they can take?)
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/3.png)
 4) Which Day?
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/4.png)
 5) Preferred Time
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/5.png)
 6) Output: Suggested Timeslots for users to choose
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/6.png)
 7) Once timeslot chosen, user will be issued an invite link to join. 
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/7.png)
+* if already in a group, notified on their timeslots
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/8.png)
 8) In their respective telegram grps, it will be up to them to decide whether to carry out a carpool/ driver hitch and the exact place to meet:)
