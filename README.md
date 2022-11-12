@@ -14,7 +14,7 @@ __Action__
 __Telegram bot : Please add @tompangplsbot__. 
 
 User Flow:
-![alt text](https://github.com/duguowei1000/TompangMePls/tree/main/pics/1.png)
+![Alt text]](https://github.com/duguowei1000/TompangMePls/tree/main/pics/1.png)
 
 
 Users  indicate:  
