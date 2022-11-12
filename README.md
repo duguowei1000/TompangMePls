@@ -14,8 +14,8 @@ __Action__
 __Telegram bot : Please add @tompangplsbot__. 
 
 User Flow:
-![alt](./tree/main/pics/1.png)
-![alt](./tree/main/pics/1.jpg)
+![alt text](./tree/main/pics/1.png?raw=true )
+![alt text](./tree/main/pics/1.jpg?raw=true )
 
 Users  indicate:  
 1) Going/Leaving Animal Lodge
