@@ -1,6 +1,4 @@
 # tompangpls
-tompangpls
-
 Techstack:    
 1) Javascript  
 2) MongoDB  
@@ -14,6 +12,10 @@ This bot serves to connect people who are going/leaving Animal lodge at the same
 
 __Action__      
 __Telegram bot : Please add @tompangplsbot__. 
+
+User Flow:
+![alt text](https://github.com/duguowei1000/TompangMePls/tree/main/pics/1.png)
+
 
 Users  indicate:  
 1) Going/Leaving Animal Lodge
