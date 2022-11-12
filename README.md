@@ -14,11 +14,12 @@ __Action__
 __Telegram bot : Please add @tompangplsbot__. 
 
 User Flow:
-![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.png?raw=true )
-![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.jpg?raw=true )
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.png)
 
 Users  indicate:  
 1) Going/Leaving Animal Lodge
+![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/2.png?raw=true )
+
 2) Passenger/Driver
 3) If Driver( how many passengers they can take?)
 4) Which Day?
