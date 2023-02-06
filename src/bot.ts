@@ -277,21 +277,22 @@ const userDriver_menu = new Menu("userDriver_menu")
             ctx.editMessageText(dayText(ctx.session.enterAL), { parse_mode: "HTML" })
         } // handler
     )
-    .submenu(
-        "Driver",
-        "driver_menu", // navigation target menu
-        (ctx) => {
-            ctx.session.isDriving.exist = true
-            ctx.editMessageText(`How many passengers can you take?`, { parse_mode: "HTML" })
-        } // handler
-    ).row()
+    // .submenu(
+    //     "Driver",
+    //     "driver_menu", // navigation target menu
+    //     (ctx) => {
+    //         ctx.session.isDriving.exist = true
+    //         ctx.editMessageText(`How many passengers can you take?`, { parse_mode: "HTML" })
+    //     } // handler
+    // )
+    .row()
     .text("Go Back", (ctx) => {
         ctx.session.enterAL = undefined
         ctx.editMessageText(`Are you a <b>Going</b> to Animal Lodge or <b>Leaving</b> Animal Lodge?`, { parse_mode: "HTML" })
         ctx.menu.nav("start-menu")
     })
 
-const userDriverText = () => `Are you a <b>Passenger</b> or <b>Driver</b>? `;
+const userDriverText = () => `Are you a <b>Passenger</b> or <s>Driver</s>? (Driver discontinued due to regulation)`;
 const start_menu = new Menu("start-menu")
     // .text("Going to Animal Lodge", (ctx) => ctx.reply("Going to Animal Lodge", { reply_markup: userDriver_menu }))
     // .text("Leaving Animal Lodge", (ctx) => ctx.reply("Leaving Animal Lodge", { reply_markup: userDriver_menu })).row()
