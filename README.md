@@ -17,7 +17,7 @@ __User Flow:__
   
 1) Going/Leaving Animal Lodge
 ![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/1.png)
-2) Passenger/Driver
+2) Passenger (Driver discontinued due to Govt regulation)
 ![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/2.png)
 3) If Driver( how many passengers they can take?)
 ![alt text](https://github.com/duguowei1000/TompangMePls/blob/main/pics/3.png)
