@@ -48,3 +48,7 @@ const links = [
     }
 ];
 exports.default = links;
+//tompangpls
+//5593156239:AAEJpi0MissVgJfKcrgLLpa8Il7wqA4eLfc 
+//tompangmepls
+//5595323607:AAFGTPMRXmARa6nSw7usmZ2VjyTK5BemFx4
